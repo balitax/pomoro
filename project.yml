@@ -1,0 +1,183 @@
+name: Pomoro
+
+# ── Swift Package Manager ────────────────────────────────────────────────────
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.5.0"
+
+# ── Global Options ─────────────────────────────────────────────────────────
+options:
+  bundleIdPrefix: id.gus
+  minimumXcodeGenVersion: "2.40.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+
+# ── Build Configurations ────────────────────────────────────────────────────
+configs:
+  Debug:   debug
+  Release: release
+
+# ── Project-level Settings ──────────────────────────────────────────────────
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    ENABLE_PREVIEWS: "YES"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""              # ← ganti dengan Team ID kamu
+    CLANG_ENABLE_MODULES: "YES"
+    ENABLE_STRICT_OBJC_MSGSEND: "YES"
+
+# ── Targets ─────────────────────────────────────────────────────────────────
+targets:
+
+  # ── 1. Main App (native iOS + macOS, bukan Catalyst) ────────────────────
+  Pomoro:
+    type: application
+    platform: [iOS, macOS]
+    deploymentTarget:
+      iOS: "17.0"
+      macOS: "14.0"
+
+    # Source files — semua folder Pomoro/ + WidgetSharedData dari widget folder
+    sources:
+      - path: Pomoro
+        excludes:
+          - "**/*.entitlements"
+          - "**/*.plist"
+      - path: PomoroWidget/WidgetSharedData.swift
+        group: Pomoro/Shared
+
+    # Info.plist di-generate XcodeGen dari properties di bawah
+    info:
+      path: Pomoro/Info.plist
+      properties:
+        CFBundleDisplayName: Pomoro
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0.0"
+        # Live Activity (iOS 16.1+)
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: false
+        # Launch screen kosong (pakai SwiftUI)
+        UILaunchScreen: {}
+        # Orientasi iPhone
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # Orientasi iPad
+        "UISupportedInterfaceOrientations~ipad":
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # Scene-based lifecycle
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations: {}
+        # Background refresh (untuk Supabase pull saat app di background)
+        BGTaskSchedulerPermittedIdentifiers:
+          - id.gus.pomoro.background-sync
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: id.gus.pomoro
+        PRODUCT_NAME: Pomoro
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # Native macOS — matikan Catalyst
+        SUPPORTS_MACCATALYST: "NO"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # Entitlements per-platform (iOS vs macOS berbeda)
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Pomoro/Pomoro-iOS.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": Pomoro/Pomoro-iOS.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Pomoro/Pomoro-macOS.entitlements
+
+    dependencies:
+      # Embed widget ke dalam app bundle
+      - target: PomoroWidget
+        embed: true
+        link: false
+      # WidgetKit untuk WidgetCenter.reload dari main app
+      - sdk: WidgetKit.framework
+        weak: true
+      # Supabase SDK
+      - package: Supabase
+        product: Supabase
+
+  # ── 2. Widget Extension (iOS only) ──────────────────────────────────────
+  PomoroWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - path: PomoroWidget
+        excludes:
+          - "**/*.entitlements"
+          - "**/*.plist"
+
+    info:
+      path: PomoroWidget/Info.plist
+      properties:
+        CFBundleDisplayName: PomoroWidget
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0.0"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+
+    entitlements:
+      path: PomoroWidget/PomoroWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.id.gus.pomoro
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: id.gus.pomoro.widget
+        PRODUCT_NAME: PomoroWidget
+        SKIP_INSTALL: "YES"
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+
+# ── Schemes ──────────────────────────────────────────────────────────────────
+# XcodeGen membuat dua target: Pomoro_iOS dan Pomoro_macOS
+# Kita buat satu scheme per platform yang juga build widget-nya.
+schemes:
+  "Pomoro (iOS)":
+    build:
+      targets:
+        Pomoro_iOS: all
+        PomoroWidget: [build]
+      parallelizeBuild: true
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  "Pomoro (macOS)":
+    build:
+      targets:
+        Pomoro_macOS: all
+      parallelizeBuild: true
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

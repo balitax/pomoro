@@ -1,0 +1,8 @@
+import Foundation
+
+/// Copy file ini: cp PomoroConfig.swift.example PomoroConfig.swift
+/// Lalu isi dengan kredensial Supabase-mu (Settings → API)
+enum PomoroConfig {
+    static let supabaseURL     = "https://xxxxxxxxxxxxxxxxxxxx.supabase.co"
+    static let supabaseAnonKey = "eyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}

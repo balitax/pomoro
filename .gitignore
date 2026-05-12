@@ -1,0 +1,33 @@
+# Xcode generated — bisa di-regenerate dengan `make generate`
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Build output
+build/
+*.o
+*.d
+
+# SPM
+.build/
+*.resolved
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Secrets — jangan pernah commit ini
+Pomoro/Config/PomoroConfig.swift
+
+# CocoaPods (kalau nanti dipakai)
+Pods/
+Podfile.lock

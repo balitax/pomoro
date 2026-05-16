@@ -19,12 +19,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String {
-        switch self {
-        case .timer:   String(localized: "Timer")
-        case .tasks:   String(localized: "Tasks")
-        case .stats:   String(localized: "Stats")
-        case .settings: String(localized: "Settings")
-        }
+        Language.shared.tabs.title(for: self)
     }
 
     var icon: String {

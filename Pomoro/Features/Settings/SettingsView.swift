@@ -14,28 +14,19 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @Environment(TimerViewModel.self) private var timerVM
+    @Environment(Language.self) private var language
 
     var body: some View {
         ZStack {
             Color(hex: "#0A0A0B").ignoresSafeArea()
 
             List {
-                // Timer durations
                 timerSection
-
-                // Behavior
                 behaviorSection
-
-                // Sound & Haptics
+                languageSection
                 soundSection
-
-                // Appearance
                 appearanceSection
-
-                // Notifications
                 notificationsSection
-
-                // About
                 aboutSection
             }
             .scrollContentBackground(.hidden)
@@ -45,24 +36,23 @@ struct SettingsView: View {
             .listStyle(.inset)
             #endif
         }
-        .navigationTitle("Settings")
+        .navigationTitle(language.settings.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
     }
 
-    // MARK: - Timer Section
-
     private let focusPresets: [Double] = [5, 10, 15, 25, 30, 45, 60]
 
+    @ViewBuilder
     private var timerSection: some View {
         Section {
             focusPresetRow
-            durationRow("Short Break", value: $settings.shortBreakDuration, range: 1...30, suffix: "min")
-            durationRow("Long Break", value: $settings.longBreakDuration, range: 5...60, suffix: "min")
+            durationRow(language.settings.shortBreak, value: $settings.shortBreakDuration, range: 1...30)
+            durationRow(language.settings.longBreak, value: $settings.longBreakDuration, range: 5...60)
 
             HStack {
-                Label("Sessions Before Long Break", systemImage: "repeat.circle")
+                Label(language.settings.sessionsBeforeLongBreak, systemImage: "repeat.circle")
                 Spacer()
                 Stepper("\(settings.sessionsBeforeLongBreak)", value: $settings.sessionsBeforeLongBreak, in: 2...8)
                     .labelsHidden()
@@ -73,7 +63,7 @@ struct SettingsView: View {
             }
 
             HStack {
-                Label("Daily Goal", systemImage: "target")
+                Label(language.settings.dailyGoal, systemImage: "target")
                 Spacer()
                 Stepper("\(settings.dailyGoal)", value: $settings.dailyGoal, in: 1...20)
                     .labelsHidden()
@@ -83,119 +73,121 @@ struct SettingsView: View {
                     .frame(width: 28)
             }
         } header: {
-            Label("Timer", systemImage: "timer")
+            Label(language.settings.timer, systemImage: "timer")
         }
     }
-
-    // MARK: - Behavior Section
 
     private var behaviorSection: some View {
         Section {
             Toggle(isOn: $settings.autoStartBreaks) {
-                Label("Auto-start Breaks", systemImage: "play.circle")
+                Label(language.settings.autoStartBreaks, systemImage: "play.circle")
             }
             Toggle(isOn: $settings.autoStartFocus) {
-                Label("Auto-start Focus", systemImage: "arrow.clockwise.circle")
+                Label(language.settings.autoStartFocus, systemImage: "arrow.clockwise.circle")
             }
         } header: {
-            Label("Behavior", systemImage: "gearshape")
+            Label(language.settings.behavior, systemImage: "gearshape")
         }
     }
 
-    // MARK: - Sound Section
+    private var languageSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { language.current },
+                set: { language.current = $0 }
+            )) {
+                ForEach(LanguageOption.allCases) { lang in
+                    Text(lang.displayName).tag(lang)
+                }
+            } label: {
+                Label(language.settings.languageSetting, systemImage: "globe")
+            }
+        }
+    }
 
     private var soundSection: some View {
         Section {
             Toggle(isOn: $settings.soundEnabled) {
-                Label("Session Sounds", systemImage: "speaker.wave.2.fill")
+                Label(language.settings.sessionSounds, systemImage: "speaker.wave.2.fill")
             }
             Toggle(isOn: $settings.tickingEnabled) {
-                Label("Ticking Sound", systemImage: "clock")
+                Label(language.settings.tickingSound, systemImage: "clock")
             }
             #if os(iOS)
             Toggle(isOn: $settings.hapticEnabled) {
-                Label("Haptic Feedback", systemImage: "iphone.radiowaves.left.and.right")
+                Label(language.settings.hapticFeedback, systemImage: "iphone.radiowaves.left.and.right")
             }
             #endif
 
-            // Ambient sound picker
             Picker(selection: $settings.selectedAmbient) {
                 ForEach(AmbientSound.allCases) { sound in
                     Label(sound.displayName, systemImage: sound.systemImage)
                         .tag(sound.rawValue)
                 }
             } label: {
-                Label("Ambient Sound", systemImage: "waveform")
+                Label(language.settings.ambientSound, systemImage: "waveform")
             }
         } header: {
-            Label("Sound & Haptics", systemImage: "speaker.wave.2")
+            Label(language.settings.soundAndHaptics, systemImage: "speaker.wave.2")
         }
     }
-
-    // MARK: - Appearance Section
 
     private var appearanceSection: some View {
         Section {
             Picker(selection: $settings.colorSchemeRaw) {
-                Text("System").tag(0)
-                Text("Light").tag(1)
-                Text("Dark").tag(2)
+                Text(language.settings.system).tag(0)
+                Text(language.settings.light).tag(1)
+                Text(language.settings.dark).tag(2)
             } label: {
-                Label("Appearance", systemImage: "circle.lefthalf.filled")
+                Label(language.settings.appearance, systemImage: "circle.lefthalf.filled")
             }
             .pickerStyle(.segmented)
 
             Toggle(isOn: $settings.showMotivation) {
-                Label("Motivational Messages", systemImage: "quote.bubble.fill")
+                Label(language.settings.motivationalMessages, systemImage: "quote.bubble.fill")
             }
         } header: {
-            Label("Appearance", systemImage: "paintpalette")
+            Label(language.settings.appearance, systemImage: "paintpalette")
         }
     }
-
-    // MARK: - Notifications Section
 
     private var notificationsSection: some View {
         Section {
             Toggle(isOn: $settings.notifyOnComplete) {
-                Label("Session Complete", systemImage: "bell.fill")
+                Label(language.settings.sessionComplete, systemImage: "bell.fill")
             }
             Toggle(isOn: $settings.notifyBreak) {
-                Label("Break Reminders", systemImage: "bell.badge")
+                Label(language.settings.breakReminders, systemImage: "bell.badge")
             }
         } header: {
-            Label("Notifications", systemImage: "bell")
+            Label(language.settings.notifications, systemImage: "bell")
         }
     }
-
-    // MARK: - About Section
 
     private var aboutSection: some View {
         Section {
             HStack {
-                Label("Version", systemImage: "info.circle")
+                Label(language.settings.version, systemImage: "info.circle")
                 Spacer()
-                Text("1.0.0")
+                Text(language.settings.appVersion)
                     .foregroundStyle(.secondary)
             }
 
             Link(destination: URL(string: "https://example.com/pomoro/privacy")!) {
-                Label("Privacy Policy", systemImage: "hand.raised.fill")
+                Label(language.settings.privacyPolicy, systemImage: "hand.raised.fill")
             }
 
             Link(destination: URL(string: "https://example.com/pomoro/support")!) {
-                Label("Support", systemImage: "questionmark.circle.fill")
+                Label(language.settings.support, systemImage: "questionmark.circle.fill")
             }
         } header: {
-            Label("About", systemImage: "app.badge")
+            Label(language.settings.about, systemImage: "app.badge")
         }
     }
 
-    // MARK: - Focus Preset Row
-
     private var focusPresetRow: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Focus Duration")
+            Text(language.settings.focusDuration)
                 .font(.body)
 
             HStack(spacing: 8) {
@@ -203,16 +195,16 @@ struct SettingsView: View {
                     Button {
                         settings.focusDuration = preset
                     } label: {
-                        Text("\(Int(preset)) min")
+                        Text(language.settings.durationLabel(Int(preset)))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(settings.focusDuration == preset ? .white : PDS.Colors.focusRed)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 7)
                             .background(
-                settings.focusDuration == preset
-                    ? PDS.Colors.focusRed
-                    : PDS.Colors.focusRed.opacity(0.1)
-            )
+                                settings.focusDuration == preset
+                                    ? PDS.Colors.focusRed
+                                    : PDS.Colors.focusRed.opacity(0.1)
+                            )
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
@@ -222,18 +214,15 @@ struct SettingsView: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: - Duration Row
-
     private func durationRow(
         _ label: String,
         value: Binding<Double>,
-        range: ClosedRange<Double>,
-        suffix: String
+        range: ClosedRange<Double>
     ) -> some View {
         HStack {
             Text(label)
             Spacer()
-            Text("\(Int(value.wrappedValue)) \(suffix)")
+            Text(language.settings.durationLabel(Int(value.wrappedValue)))
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(PDS.Colors.focusRed)
                 .frame(minWidth: 60, alignment: .trailing)

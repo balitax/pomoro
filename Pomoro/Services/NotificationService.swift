@@ -26,20 +26,21 @@ final class NotificationService {
         cancelPending()
         guard timeRemaining > 0 else { return }
 
+        let lang = Language.shared.notifications
         let content = UNMutableNotificationContent()
         content.sound = .default
 
         switch sessionType {
         case .focus:
-            content.title = "Focus Session Complete 🍅"
-            content.body  = "Great work! Time for a break."
+            content.title = lang.focusComplete
+            content.body  = lang.focusBody
             content.categoryIdentifier = "FOCUS_COMPLETE"
         case .shortBreak:
-            content.title = "Break Over ☕"
-            content.body  = "Ready to focus again?"
+            content.title = lang.breakOver
+            content.body  = lang.breakBody
         case .longBreak:
-            content.title = "Long Break Done 🌿"
-            content.body  = "Feeling refreshed? Let's get back to it!"
+            content.title = lang.longBreakDone
+            content.body  = lang.longBreakBody
         }
 
         let trigger = UNTimeIntervalNotificationTrigger(
@@ -55,9 +56,10 @@ final class NotificationService {
     }
 
     func scheduleBreakReminder(after delay: TimeInterval = 300) {
+        let lang = Language.shared.notifications
         let content = UNMutableNotificationContent()
-        content.title = "Still taking a break?"
-        content.body  = "Tap to start your next focus session."
+        content.title = lang.breakReminder
+        content.body  = lang.breakReminderBody
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)

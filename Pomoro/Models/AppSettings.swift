@@ -84,14 +84,7 @@ enum AmbientSound: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var displayName: String {
-        switch self {
-        case .none:   String(localized: "None")
-        case .rain:   String(localized: "Rain")
-        case .forest: String(localized: "Forest")
-        case .cafe:   String(localized: "Café")
-        case .waves:  String(localized: "Ocean Waves")
-        case .fire:   String(localized: "Fireplace")
-        }
+        Language.shared.ambient.displayName(for: self)
     }
 
     var systemImage: String {

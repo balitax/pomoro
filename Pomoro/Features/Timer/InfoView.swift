@@ -13,12 +13,12 @@ import SwiftUI
 
 struct InfoView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(Language.self) private var language
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 32) {
-                    // App icon + name
                     VStack(spacing: 12) {
                         Image("logo")
                             .resizable()
@@ -26,42 +26,32 @@ struct InfoView: View {
                             .frame(width: 80, height: 80)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                        Text("Pomoro")
+                        Text(language.info.appName)
                             .font(.title.bold())
 
-                        Text("Version 1.0")
+                        Text(language.info.versionLabel)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 24)
                     .frame(maxWidth: .infinity)
 
-                    // Features list
                     VStack(alignment: .leading, spacing: 0) {
-                        infoRow(icon: "timer", title: "Pomodoro Timer",
-                                subtitle: "Focus sessions with short and long breaks")
-                        Divider().padding(.leading, 58)
-                        infoRow(icon: "checklist", title: "Task Tracking",
-                                subtitle: "Link tasks to your focus sessions")
-                        Divider().padding(.leading, 58)
-                        infoRow(icon: "chart.bar.fill", title: "Statistics",
-                                subtitle: "Track your productivity over time")
-                        Divider().padding(.leading, 58)
-                        infoRow(icon: "bell.badge", title: "Notifications",
-                                subtitle: "Get notified when your session ends")
-                        Divider().padding(.leading, 58)
-                        infoRow(icon: "macbook.and.iphone", title: "iOS & macOS",
-                                subtitle: "Available on all your Apple devices")
+                        ForEach(language.info.featureRows, id: \.title) { row in
+                            infoRow(icon: row.icon, title: row.title, subtitle: row.subtitle)
+                            if row.title != language.info.featureRows.last?.title {
+                                Divider().padding(.leading, 58)
+                            }
+                        }
                     }
                     .background(Color.platformSecondaryBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                    // Credits
                     VStack(spacing: 4) {
-                        Text("Made with ♥ by Agus Cahyono")
+                        Text(language.info.madeWithLove)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                        Text("© 2025 Pomoro. All rights reserved.")
+                        Text(language.info.copyright)
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
@@ -70,13 +60,13 @@ struct InfoView: View {
                 .padding(.horizontal, 16)
             }
             .background(Color.platformBackground)
-            .navigationTitle("About Pomoro")
+            .navigationTitle(language.info.title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(language.common.done) { dismiss() }
                         .fontWeight(.semibold)
                 }
             }

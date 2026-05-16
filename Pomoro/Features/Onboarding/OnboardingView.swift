@@ -13,13 +13,14 @@ import ComposableArchitecture
 
 struct OnboardingView: View {
     @Bindable var store: StoreOf<OnboardingFeature>
+    @Environment(Language.self) private var language
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Spacer()
                 if !store.isLastPage {
-                    Button("Skip") {
+                    Button(language.common.skip) {
                         store.send(.skipTapped)
                     }
                     .foregroundStyle(.secondary)
@@ -29,14 +30,18 @@ struct OnboardingView: View {
             .padding(.top, 16)
             .frame(height: 48)
 
-            OnboardingPageView(page: store.pages[store.currentPage])
-                .id(store.currentPage)
-                .transition(.asymmetric(
-                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal:   .move(edge: .leading).combined(with: .opacity)
-                ))
-                .animation(.easeInOut(duration: 0.28), value: store.currentPage)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            OnboardingPageView(
+                icon: store.pages[store.currentPage].icon,
+                title: language.onboarding.pageTitle(index: store.currentPage),
+                subtitle: language.onboarding.pageSubtitle(index: store.currentPage)
+            )
+            .id(store.currentPage)
+            .transition(.asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal:   .move(edge: .leading).combined(with: .opacity)
+            ))
+            .animation(.easeInOut(duration: 0.28), value: store.currentPage)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             HStack(spacing: 8) {
                 ForEach(0..<store.pages.count, id: \.self) { i in
@@ -51,7 +56,7 @@ struct OnboardingView: View {
             Button {
                 store.send(.nextTapped)
             } label: {
-                Text(store.isLastPage ? "Get Started" : "Continue")
+                Text(store.isLastPage ? language.onboarding.getStarted : language.common.continue)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
@@ -65,20 +70,22 @@ struct OnboardingView: View {
 }
 
 struct OnboardingPageView: View {
-    let page: OnboardingPage
+    let icon: String
+    let title: String
+    let subtitle: String
 
     var body: some View {
         VStack(spacing: 28) {
             Spacer()
-            Image(systemName: page.icon)
+            Image(systemName: icon)
                 .font(.system(size: 72, weight: .thin))
                 .foregroundStyle(.tint)
                 .symbolRenderingMode(.hierarchical)
             VStack(spacing: 12) {
-                Text(page.title)
+                Text(title)
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
-                Text(page.subtitle)
+                Text(subtitle)
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -91,26 +98,12 @@ struct OnboardingPageView: View {
 }
 
 struct OnboardingPage: Equatable {
-    let title: String
-    let subtitle: String
     let icon: String
 
     static let allPages: [OnboardingPage] = [
-        OnboardingPage(
-            title: String(localized: "Focus on What Matters"),
-            subtitle: String(localized: "Use the proven Pomodoro technique to work deeply and recharge intentionally."),
-            icon: "timer"
-        ),
-        OnboardingPage(
-            title: String(localized: "Manage Your Tasks"),
-            subtitle: String(localized: "Capture what needs to get done and link tasks directly to your focus sessions."),
-            icon: "checklist"
-        ),
-        OnboardingPage(
-            title: String(localized: "Track Your Progress"),
-            subtitle: String(localized: "Daily streaks and insightful charts keep you motivated and on track."),
-            icon: "chart.bar.fill"
-        ),
+        OnboardingPage(icon: "timer"),
+        OnboardingPage(icon: "checklist"),
+        OnboardingPage(icon: "chart.bar.fill"),
     ]
 }
 

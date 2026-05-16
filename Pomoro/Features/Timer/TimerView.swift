@@ -16,6 +16,7 @@ struct TimerView: View {
     @Bindable var store: StoreOf<FocusFeature>
     @Environment(TaskViewModel.self) private var taskVM
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(Language.self) private var language
 
     @State private var showTaskPicker = false
     @State private var showInfo = false
@@ -96,10 +97,10 @@ struct TimerView: View {
                     }
                 }
                 HStack(spacing: 6) {
-                    Text("\(store.currentSession.displayName) session")
+                    Text(language.timer.sessionLabel(store.currentSession.displayName))
                         .font(.subheadline).foregroundStyle(.secondary)
-                    Text("·").foregroundStyle(.tertiary)
-                    Text("\(store.currentSessionNumber) of \(store.totalSessionsPerCycle)")
+                    Text(language.timer.separator).foregroundStyle(.tertiary)
+                    Text(language.timer.sessionsProgress(current: store.currentSessionNumber, total: store.totalSessionsPerCycle))
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
                 .animation(.easeInOut(duration: 0.3), value: store.currentSession)
@@ -113,7 +114,7 @@ struct TimerView: View {
             Button { store.send(.resetTapped) } label: {
                 VStack(spacing: 5) {
                     Image(systemName: "arrow.counterclockwise").font(.system(size: 20))
-                    Text("Reset").font(.caption)
+                    Text(language.common.reset).font(.caption)
                 }.foregroundStyle(.secondary).frame(width: 64)
             }.buttonStyle(SpringButtonStyle())
             Spacer()
@@ -121,7 +122,7 @@ struct TimerView: View {
             Button { store.send(.skipTapped) } label: {
                 VStack(spacing: 5) {
                     Image(systemName: "forward.end.fill").font(.system(size: 20))
-                    Text("Skip").font(.caption)
+                    Text(language.common.skip).font(.caption)
                 }.foregroundStyle(.secondary).frame(width: 64)
             }.buttonStyle(SpringButtonStyle())
             Spacer()
@@ -130,7 +131,7 @@ struct TimerView: View {
 
     private var upNextCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Up Next").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+            Text(language.timer.upNext).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
             HStack(spacing: 14) {
                 ZStack {
                     Circle().fill(store.nextSession.color.opacity(0.12)).frame(width: 46, height: 46)
@@ -161,7 +162,7 @@ struct TimerView: View {
                     .foregroundStyle(store.currentSession.color).font(.system(size: 20))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(task.title).font(.subheadline.weight(.medium)).lineLimit(1)
-                    Text("\(task.completedPomodoros) / \(task.estimatedPomodoros) sessions")
+                    Text(language.timer.taskProgress(completed: task.completedPomodoros, estimated: task.estimatedPomodoros))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -184,7 +185,7 @@ struct TimerView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle")
-                    Text("Link a task")
+                    Text(language.timer.linkATask)
                 }
                 .font(.subheadline).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity).padding(16)
@@ -199,6 +200,7 @@ struct TimerView: View {
 struct TaskPickerSheet: View {
     @Binding var isPresented: Bool
     @Environment(TaskViewModel.self) private var taskVM
+    @Environment(Language.self) private var language
     @Query(filter: #Predicate<PomodoroTask> { !$0.isCompleted },
            sort: \PomodoroTask.createdAt, order: .reverse)
     private var tasks: [PomodoroTask]
@@ -213,7 +215,7 @@ struct TaskPickerSheet: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(task.title).font(.body).foregroundStyle(.primary)
-                            Text("\(task.remainingPomodoros) pomodoros remaining")
+                            Text(language.timer.pomodorosRemaining(task.remainingPomodoros))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -222,16 +224,16 @@ struct TaskPickerSheet: View {
                 }
                 .buttonStyle(.plain)
             }
-            .navigationTitle("Choose Task")
+            .navigationTitle(language.timer.chooseTask)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isPresented = false }
+                    Button(language.common.cancel) { isPresented = false }
                 }
             }
             .overlay {
                 if tasks.isEmpty {
-                    EmptyStateView(icon: "checklist", title: "No Tasks", subtitle: "Add a task to link it to your session")
+                    EmptyStateView(icon: "checklist", title: language.timer.noTasks, subtitle: language.timer.addTaskToLink)
                 }
             }
         }

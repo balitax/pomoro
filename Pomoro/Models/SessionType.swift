@@ -19,19 +19,11 @@ enum SessionType: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var displayName: String {
-        switch self {
-        case .focus:      String(localized: "Focus")
-        case .shortBreak: String(localized: "Short Break")
-        case .longBreak:  String(localized: "Long Break")
-        }
+        Language.shared.session.displayName(for: self)
     }
 
     var shortName: String {
-        switch self {
-        case .focus:      String(localized: "FOCUS")
-        case .shortBreak: String(localized: "BREAK")
-        case .longBreak:  String(localized: "LONG BREAK")
-        }
+        Language.shared.session.shortName(for: self)
     }
 
     var emoji: String {

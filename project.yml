@@ -60,8 +60,6 @@ targets:
         excludes:
           - "**/*.entitlements"
           - "**/*.plist"
-      - path: PomoroWidget/WidgetSharedData.swift
-        group: Pomoro/Shared
 
     info:
       path: Pomoro/Info.plist
@@ -129,6 +127,7 @@ targets:
         excludes:
           - "**/*.entitlements"
           - "**/*.plist"
+      - path: Pomoro/Shared/WidgetSharedData.swift
 
     info:
       path: PomoroWidget/Info.plist

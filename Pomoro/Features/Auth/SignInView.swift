@@ -14,6 +14,7 @@ import ComposableArchitecture
 
 struct SignInView: View {
     @Bindable var store: StoreOf<SignInFeature>
+    @Environment(Language.self) private var language
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,9 +24,9 @@ struct SignInView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 72, height: 72)
-                Text("Pomoro")
+                Text(language.signIn.appName)
                     .font(.largeTitle.bold())
-                Text("Focus beautifully.")
+                Text(language.signIn.tagline)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -34,7 +35,7 @@ struct SignInView: View {
                 Button {
                     store.send(.signInWithAppleTapped)
                 } label: {
-                    Label("Continue with Apple", systemImage: "apple.logo")
+                    Label(language.signIn.continueWithApple, systemImage: "apple.logo")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -45,7 +46,7 @@ struct SignInView: View {
                 } label: {
                     HStack(spacing: 8) {
                         GoogleGIcon().frame(width: 16, height: 16)
-                        Text("Continue with Google")
+                        Text(language.signIn.continueWithGoogle)
                             .foregroundStyle(Color.primary)
                     }
                     .frame(maxWidth: .infinity)
@@ -63,11 +64,11 @@ struct SignInView: View {
             .padding(.horizontal, 24)
 
             Group {
-                Text("By continuing, you agree to our ")
-                + Text("Terms of Service").underline()
-                + Text(" and ")
-                + Text("Privacy Policy").underline()
-                + Text(".")
+                Text(language.signIn.legalPrefix)
+                + Text(language.signIn.termsOfService).underline()
+                + Text(language.signIn.and)
+                + Text(language.signIn.privacyPolicy).underline()
+                + Text(language.signIn.period)
             }
             .font(.caption2)
             .foregroundStyle(.secondary)

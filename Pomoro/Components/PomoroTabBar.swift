@@ -14,6 +14,7 @@ import SwiftUI
 struct PomoroTabBar: View {
     @Binding var selectedTab: AppTab
     @Environment(TimerViewModel.self) private var timerVM
+    @Environment(Language.self) private var language
 
     var body: some View {
         HStack(spacing: 0) {
@@ -59,7 +60,7 @@ struct PomoroTabBar: View {
                     }
                 }
 
-                Text(tab.title)
+                Text(language.tabs.title(for: tab))
                     .font(.system(size: 10,
                                   weight: selectedTab == tab ? .semibold : .regular,
                                   design: .rounded))

@@ -15,6 +15,7 @@ import SwiftData
 struct TaskListView: View {
     @Environment(TaskViewModel.self) private var taskVM
     @Environment(\.modelContext) private var modelContext
+    @Environment(Language.self) private var language
 
     @Query(sort: \PomodoroTask.createdAt, order: .reverse)
     private var allTasks: [PomodoroTask]
@@ -38,14 +39,14 @@ struct TaskListView: View {
                 if allTasks.isEmpty {
                     EmptyStateView(
                         icon: "checklist",
-                        title: "No Tasks Yet",
-                        subtitle: "Add a task to track your pomodoro sessions"
+                        title: language.tasks.noTasksYet,
+                        subtitle: language.tasks.noTasksDescription
                     )
                 } else {
                     taskList
                 }
             }
-            .navigationTitle("Tasks")
+            .navigationTitle(language.tasks.title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
@@ -60,11 +61,8 @@ struct TaskListView: View {
         }
     }
 
-    // MARK: - Task List
-
     private var taskList: some View {
         List {
-            // Today section
             if !todayTasks.isEmpty {
                 Section {
                     ForEach(todayTasks) { task in
@@ -76,24 +74,23 @@ struct TaskListView: View {
                                 Button(role: .destructive) {
                                     withAnimation { taskVM.delete(task) }
                                 } label: {
-                                    Label("Delete", systemImage: "trash.fill")
+                                    Label(language.common.delete, systemImage: "trash.fill")
                                 }
                             }
                             .swipeActions(edge: .leading) {
                                 Button {
                                     taskVM.toggle(task)
                                 } label: {
-                                    Label("Done", systemImage: "checkmark.circle.fill")
+                                    Label(language.common.done, systemImage: "checkmark.circle.fill")
                                 }
                                 .tint(.green)
                             }
                     }
                 } header: {
-                    sectionHeader("Today", count: todayTasks.count)
+                    sectionHeader(language.tasks.today, count: todayTasks.count)
                 }
             }
 
-            // Completed section
             if !completedTasks.isEmpty {
                 Section {
                     if showCompleted {
@@ -106,7 +103,7 @@ struct TaskListView: View {
                                     Button(role: .destructive) {
                                         withAnimation { taskVM.delete(task) }
                                     } label: {
-                                        Label("Delete", systemImage: "trash.fill")
+                                        Label(language.common.delete, systemImage: "trash.fill")
                                     }
                                 }
                         }
@@ -118,7 +115,7 @@ struct TaskListView: View {
                         }
                     } label: {
                         HStack {
-                            sectionHeader("Completed", count: completedTasks.count)
+                            sectionHeader(language.tasks.completed, count: completedTasks.count)
                             Spacer()
                             Image(systemName: showCompleted ? "chevron.up" : "chevron.down")
                                 .font(.caption)
@@ -147,8 +144,6 @@ struct TaskListView: View {
         }
         .textCase(nil)
     }
-
-    // MARK: - Toolbar
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {

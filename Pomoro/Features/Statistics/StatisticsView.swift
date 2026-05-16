@@ -15,6 +15,7 @@ import Charts
 
 struct StatisticsView: View {
     @Environment(StatisticsViewModel.self) private var statsVM
+    @Environment(Language.self) private var language
     @Query private var allSessions: [PomodoroSession]
 
     var body: some View {
@@ -24,55 +25,38 @@ struct StatisticsView: View {
 
                 ScrollView {
                     LazyVStack(spacing: PDS.Spacing.md) {
-
-                        // Today headline
                         todaySection
-
-                        // Weekly chart
                         weeklyChartSection
-
-                        // All-time stats
                         allTimeSection
-
                         Spacer(minLength: 80)
                     }
                     .padding(.horizontal, PDS.Spacing.md)
                     .padding(.top, PDS.Spacing.md)
                 }
             }
-            .navigationTitle("Statistics")
+            .navigationTitle(language.statistics.title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
         }
-        .onAppear {
-            statsVM.load(sessions: allSessions)
-        }
-        .onChange(of: allSessions.count) { _, _ in
-            statsVM.load(sessions: allSessions)
-        }
+        .onAppear { statsVM.load(sessions: allSessions) }
+        .onChange(of: allSessions.count) { _, _ in statsVM.load(sessions: allSessions) }
     }
-
-    // MARK: - Today Section
 
     private var todaySection: some View {
         VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
-            sectionTitle("Today")
-
-            // Daily Goal card
+            sectionTitle(language.statistics.today)
             dailyGoalCard
-
-            // Stat chips row
             HStack(spacing: PDS.Spacing.md) {
                 StatCard(
                     value: statsVM.totalFocusTodayFormatted,
-                    label: "Focus Time",
+                    label: language.statistics.focusTime,
                     icon: "clock.fill",
                     color: PDS.Colors.longBreakBlue
                 )
                 StatCard(
                     value: "\(statsVM.currentStreak)",
-                    label: "Day Streak",
+                    label: language.statistics.dayStreak,
                     icon: "flame.fill",
                     color: Color.orange
                 )
@@ -80,11 +64,8 @@ struct StatisticsView: View {
         }
     }
 
-    // MARK: - Daily Goal Card
-
     private var dailyGoalCard: some View {
         HStack(spacing: 20) {
-            // Progress ring
             ZStack {
                 Circle()
                     .stroke(PDS.Colors.focusRed.opacity(0.12), lineWidth: 10)
@@ -92,18 +73,12 @@ struct StatisticsView: View {
                 Circle()
                     .trim(from: 0, to: statsVM.dailyGoalProgress)
                     .stroke(
-                        LinearGradient(
-                            colors: [Color(hex: "#FF6B6B"), PDS.Colors.focusRed],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
+                        LinearGradient(colors: [Color(hex: "#FF6B6B"), PDS.Colors.focusRed], startPoint: .topLeading, endPoint: .bottomTrailing),
                         style: StrokeStyle(lineWidth: 10, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
                     .frame(width: 84, height: 84)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.75),
-                               value: statsVM.dailyGoalProgress)
-
+                    .animation(.spring(response: 0.6, dampingFraction: 0.75), value: statsVM.dailyGoalProgress)
                 VStack(spacing: 0) {
                     Text("\(statsVM.completedTodayCount)")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -115,56 +90,45 @@ struct StatisticsView: View {
 
             VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Daily Goal")
+                    Text(language.statistics.dailyGoal)
                         .font(.system(size: 15, weight: .semibold))
                     Text(statsVM.dailyGoalProgress >= 1
-                         ? "Goal reached! 🎉"
-                         : "\(statsVM.dailyGoal - statsVM.completedTodayCount) sessions to go")
+                         ? language.statistics.goalReached
+                         : language.statistics.sessionsToGo(statsVM.dailyGoal - statsVM.completedTodayCount))
                         .font(.caption)
                         .foregroundStyle(statsVM.dailyGoalProgress >= 1
                                          ? PDS.Colors.breakGreen
                                          : Color.secondary)
                 }
-
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(PDS.Colors.focusRed.opacity(0.12))
-                            .frame(height: 5)
+                        Capsule().fill(PDS.Colors.focusRed.opacity(0.12)).frame(height: 5)
                         Capsule()
                             .fill(PDS.Colors.focusRed)
                             .frame(width: geo.size.width * statsVM.dailyGoalProgress, height: 5)
-                            .animation(.spring(response: 0.6, dampingFraction: 0.75),
-                                       value: statsVM.dailyGoalProgress)
+                            .animation(.spring(response: 0.6, dampingFraction: 0.75), value: statsVM.dailyGoalProgress)
                     }
                 }
                 .frame(height: 5)
             }
-
             Spacer()
         }
         .padding(PDS.Spacing.md)
         .glassBackground()
     }
 
-    // MARK: - Weekly Chart
-
     private var weeklyChartSection: some View {
         VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
-            sectionTitle("This Week")
-
+            sectionTitle(language.statistics.thisWeek)
             VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
                 Chart(statsVM.weeklyData) { day in
-                    BarMark(
-                        x: .value("Day", day.dayLabel),
-                        y: .value("Pomodoros", day.pomodoroCount)
-                    )
-                    .foregroundStyle(
-                        day.isToday
-                            ? LinearGradient(colors: PDS.Colors.focusRed.gradientLike, startPoint: .bottom, endPoint: .top)
-                            : LinearGradient(colors: [Color.secondary.opacity(0.3)], startPoint: .bottom, endPoint: .top)
-                    )
-                    .cornerRadius(6)
+                    BarMark(x: .value("Day", day.dayLabel), y: .value("Pomodoros", day.pomodoroCount))
+                        .foregroundStyle(
+                            day.isToday
+                                ? LinearGradient(colors: PDS.Colors.focusRed.gradientLike, startPoint: .bottom, endPoint: .top)
+                                : LinearGradient(colors: [Color.secondary.opacity(0.3)], startPoint: .bottom, endPoint: .top)
+                        )
+                        .cornerRadius(6)
                 }
                 .frame(height: 160)
                 .chartXAxis {
@@ -183,30 +147,25 @@ struct StatisticsView: View {
         }
     }
 
-    // MARK: - All Time Section
-
     private var allTimeSection: some View {
         VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
-            sectionTitle("All Time")
-
+            sectionTitle(language.statistics.allTime)
             HStack(spacing: PDS.Spacing.md) {
                 StatCard(
                     value: "\(statsVM.totalAllTime)",
-                    label: "Pomodoros",
+                    label: language.statistics.pomodoros,
                     icon: "checkmark.seal.fill",
                     color: PDS.Colors.breakGreen
                 )
                 StatCard(
                     value: statsVM.averageDailyFocus,
-                    label: "Daily Avg",
+                    label: language.statistics.dailyAvg,
                     icon: "calendar.badge.clock",
                     color: Color.purple
                 )
             }
         }
     }
-
-    // MARK: - Section Title
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title)
@@ -216,8 +175,6 @@ struct StatisticsView: View {
             .textCase(.uppercase)
     }
 }
-
-// MARK: - Stat Card
 
 struct StatCard: View {
     let value: String
@@ -232,14 +189,11 @@ struct StatCard: View {
                 .foregroundStyle(color)
                 .padding(8)
                 .background(color.opacity(0.12), in: Circle())
-
             Spacer()
-
             Text(value)
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
                 .minimumScaleFactor(0.7)
-
             Text(label)
                 .font(PDS.Typography.caption)
                 .foregroundStyle(.secondary)

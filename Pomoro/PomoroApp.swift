@@ -20,6 +20,7 @@ struct PomoroApp: App {
     @State private var timerVM      = TimerViewModel()
     @State private var taskVM       = TaskViewModel()
     @State private var statsVM      = StatisticsViewModel()
+    @State private var language     = Language.shared
 
     @State private var store = Store(initialState: AppFeature.State()) {
         AppFeature()
@@ -48,6 +49,7 @@ struct PomoroApp: App {
                 .environment(timerVM)
                 .environment(authService)
                 .environment(syncService)
+                .environment(language)
                 .task { await setupSync() }
         }
     }

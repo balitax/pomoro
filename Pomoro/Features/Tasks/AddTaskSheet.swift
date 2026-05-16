@@ -14,6 +14,7 @@ import SwiftUI
 struct AddTaskSheet: View {
     @Binding var isPresented: Bool
     @Environment(TaskViewModel.self) private var taskVM
+    @Environment(Language.self) private var language
 
     @State private var title = ""
     @State private var notes = ""
@@ -25,20 +26,20 @@ struct AddTaskSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Task name", text: $title, axis: .vertical)
+                    TextField(language.tasks.taskName, text: $title, axis: .vertical)
                         .font(PDS.Typography.body)
                         .focused($titleFocused)
                         .lineLimit(1...3)
 
-                    TextField("Notes (optional)", text: $notes, axis: .vertical)
+                    TextField(language.tasks.notes, text: $notes, axis: .vertical)
                         .font(PDS.Typography.body)
                         .foregroundStyle(.secondary)
                         .lineLimit(1...5)
                 }
 
-                Section("Pomodoros") {
+                Section(language.tasks.pomodoros) {
                     HStack {
-                        Text("Estimated sessions")
+                        Text(language.tasks.estimatedSessions)
                         Spacer()
                         Stepper("\(estimatedPomodoros)", value: $estimatedPomodoros, in: 1...12)
                             .labelsHidden()
@@ -48,24 +49,23 @@ struct AddTaskSheet: View {
                             .frame(width: 28)
                     }
 
-                    // Visual pomodoro selector
                     pomoDotsSelector
                 }
 
                 Section {
-                    Toggle("Add to today", isOn: $isToday)
+                    Toggle(language.tasks.addToToday, isOn: $isToday)
                 }
             }
-            .navigationTitle("New Task")
+            .navigationTitle(language.tasks.newTask)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { isPresented = false }
+                    Button(language.common.cancel) { isPresented = false }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button(language.common.add) {
                         taskVM.addTask(
                             title: title,
                             notes: notes,
@@ -85,8 +85,6 @@ struct AddTaskSheet: View {
         #endif
         .onAppear { titleFocused = true }
     }
-
-    // MARK: - Pomo Dots Selector
 
     private var pomoDotsSelector: some View {
         VStack(alignment: .leading, spacing: PDS.Spacing.sm) {

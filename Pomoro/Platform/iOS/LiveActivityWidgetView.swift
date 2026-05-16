@@ -14,6 +14,7 @@ import ActivityKit
 
 struct PomoroLiveActivityView: View {
     let context: ActivityViewContext<PomoroActivityAttributes>
+    @Environment(Language.self) private var language
 
     private var progress: Double    { context.state.progress }
     private var timeString: String  { context.state.timeDisplayString }
@@ -43,11 +44,7 @@ struct PomoroLiveActivityView: View {
     }
 
     private var sessionName: String {
-        switch sessionType {
-        case "focus":       "Focus Session"
-        case "short_break": "Short Break"
-        default:            "Long Break"
-        }
+        Language.shared.liveActivity.sessionName(for: sessionType)
     }
 
     var body: some View {
@@ -94,7 +91,7 @@ struct PomoroLiveActivityView: View {
                     ProgressView(value: progress)
                         .tint(sessionColor)
                         .frame(width: 80)
-                    Text(isRunning ? "Running" : "Paused")
+                    Text(language.liveActivity.statusLabel(isRunning: isRunning))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(.tertiary)
                 }
@@ -109,7 +106,7 @@ struct PomoroLiveActivityView: View {
                     Circle()
                         .fill(isRunning ? sessionColor : Color.secondary)
                         .frame(width: 5, height: 5)
-                    Text(isRunning ? "Running" : "Paused")
+                    Text(language.liveActivity.statusLabel(isRunning: isRunning))
                         .font(.system(size: 9, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }

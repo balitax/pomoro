@@ -1,3 +1,11 @@
+//
+//  AddTaskSheet.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 
 struct AddTaskSheet: View {
@@ -46,7 +54,9 @@ struct AddTaskSheet: View {
                 }
             }
             .navigationTitle("New Task")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { isPresented = false }
@@ -66,8 +76,10 @@ struct AddTaskSheet: View {
                 }
             }
         }
+        #if os(iOS)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+        #endif
         .onAppear { titleFocused = true }
     }
 

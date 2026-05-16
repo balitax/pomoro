@@ -1,3 +1,11 @@
+//
+//  SessionType.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 
 enum SessionType: String, Codable, CaseIterable, Identifiable {

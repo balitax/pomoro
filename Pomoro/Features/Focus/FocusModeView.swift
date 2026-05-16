@@ -1,3 +1,11 @@
+//
+//  FocusModeView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 
 struct FocusModeView: View {
@@ -184,4 +192,10 @@ struct FocusModeView: View {
             withAnimation { showControls = false }
         }
     }
+}
+
+#Preview {
+    FocusModeView(isPresented: .constant(true))
+        .environment(TimerViewModel())
+        .environment(TaskViewModel())
 }

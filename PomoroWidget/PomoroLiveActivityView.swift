@@ -1,0 +1,146 @@
+import SwiftUI
+import WidgetKit
+import ActivityKit
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3:
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6:
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8:
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(
+            .sRGB,
+            red:   Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+// MARK: - Lock Screen / Notification Center banner
+
+struct PomoroLiveActivityView: View {
+    let context: ActivityViewContext<PomoroActivityAttributes>
+
+    private var progress: Double    { context.state.progress }
+    private var timeString: String  { context.state.timeDisplayString }
+    private var isRunning: Bool     { context.state.isRunning }
+    private var sessionType: String { context.state.sessionType }
+
+    private var sessionColor: Color {
+        switch sessionType {
+        case "focus":       Color(red: 1,     green: 0.267, blue: 0.267)
+        case "short_break": Color(red: 0.204, green: 0.78,  blue: 0.349)
+        default:            Color(red: 0,     green: 0.478, blue: 1)
+        }
+    }
+
+    private var sessionGradient: LinearGradient {
+        switch sessionType {
+        case "focus":
+            LinearGradient(colors: [Color(hex: "#FF6B6B"), Color(hex: "#FF4444")],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        case "short_break":
+            LinearGradient(colors: [Color(hex: "#4CD964"), Color(hex: "#30C85A")],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        default:
+            LinearGradient(colors: [Color(hex: "#5AC8FA"), Color(hex: "#007AFF")],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
+
+    private var sessionName: String {
+        switch sessionType {
+        case "focus":       "Focus Session"
+        case "short_break": "Short Break"
+        default:            "Long Break"
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Progress ring with icon
+            ZStack {
+                Circle()
+                    .stroke(sessionColor.opacity(0.15), lineWidth: 3)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(sessionGradient,
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.3), value: progress)
+                ZStack {
+                    Circle()
+                        .fill(sessionColor.opacity(0.1))
+                        .frame(width: 28, height: 28)
+                    Image("dynamic_icon").resizable().scaledToFit().frame(width: 16, height: 16)
+                }
+            }
+            .frame(width: 44, height: 44)
+
+            // Session info
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 6) {
+                    Text(sessionName)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(sessionColor)
+                    if !context.state.taskTitle.isEmpty {
+                        Text("·")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Text(context.state.taskTitle)
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                Text(timeString)
+                    .font(.system(size: 28, weight: .ultraLight, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
+                HStack(spacing: 4) {
+                    ProgressView(value: progress)
+                        .tint(sessionColor)
+                        .frame(width: 80)
+                    Text(isRunning ? "Running" : "Paused")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            Spacer()
+
+            // Status badge
+            VStack(spacing: 6) {
+                Image("dynamic_icon").resizable().scaledToFit().frame(width: 18, height: 18)
+                    .opacity(0.5)
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(isRunning ? sessionColor : Color.secondary)
+                        .frame(width: 5, height: 5)
+                    Text(isRunning ? "Running" : "Paused")
+                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(sessionColor.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}

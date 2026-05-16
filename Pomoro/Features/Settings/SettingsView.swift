@@ -1,3 +1,11 @@
+//
+//  SettingsView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -5,44 +13,48 @@ struct SettingsView: View {
     @Environment(TimerViewModel.self) private var timerVM
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(hex: "#0A0A0B").ignoresSafeArea()
+        ZStack {
+            Color(hex: "#0A0A0B").ignoresSafeArea()
 
-                List {
-                    // Timer durations
-                    timerSection
+            List {
+                // Timer durations
+                timerSection
 
-                    // Behavior
-                    behaviorSection
+                // Behavior
+                behaviorSection
 
-                    // Sound & Haptics
-                    soundSection
+                // Sound & Haptics
+                soundSection
 
-                    // Appearance
-                    appearanceSection
+                // Appearance
+                appearanceSection
 
-                    // Notifications
-                    notificationsSection
+                // Notifications
+                notificationsSection
 
-                    // About
-                    aboutSection
-                }
-                .scrollContentBackground(.hidden)
-                .listStyle(.insetGrouped)
+                // About
+                aboutSection
             }
-            .navigationTitle("Settings")
+            .scrollContentBackground(.hidden)
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
+            .listStyle(.insetGrouped)
+            #else
+            .listStyle(.inset)
             #endif
         }
+        .navigationTitle("Settings")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
     }
 
     // MARK: - Timer Section
 
+    private let focusPresets: [Double] = [5, 10, 15, 25, 30, 45, 60]
+
     private var timerSection: some View {
         Section {
-            durationRow("Focus Duration", value: $settings.focusDuration, range: 1...60, suffix: "min")
+            focusPresetRow
             durationRow("Short Break", value: $settings.shortBreakDuration, range: 1...30, suffix: "min")
             durationRow("Long Break", value: $settings.longBreakDuration, range: 5...60, suffix: "min")
 
@@ -55,6 +67,17 @@ struct SettingsView: View {
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(PDS.Colors.focusRed)
                     .frame(width: 24)
+            }
+
+            HStack {
+                Label("Daily Goal", systemImage: "target")
+                Spacer()
+                Stepper("\(settings.dailyGoal)", value: $settings.dailyGoal, in: 1...20)
+                    .labelsHidden()
+                Text("\(settings.dailyGoal)")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundStyle(PDS.Colors.focusRed)
+                    .frame(width: 28)
             }
         } header: {
             Label("Timer", systemImage: "timer")
@@ -163,6 +186,37 @@ struct SettingsView: View {
         } header: {
             Label("About", systemImage: "app.badge")
         }
+    }
+
+    // MARK: - Focus Preset Row
+
+    private var focusPresetRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Focus Duration")
+                .font(.body)
+
+            HStack(spacing: 8) {
+                ForEach(focusPresets, id: \.self) { preset in
+                    Button {
+                        settings.focusDuration = preset
+                    } label: {
+                        Text("\(Int(preset)) min")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(settings.focusDuration == preset ? .white : PDS.Colors.focusRed)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(
+                settings.focusDuration == preset
+                    ? PDS.Colors.focusRed
+                    : PDS.Colors.focusRed.opacity(0.1)
+            )
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Duration Row

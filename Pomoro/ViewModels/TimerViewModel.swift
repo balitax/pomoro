@@ -1,3 +1,11 @@
+//
+//  TimerViewModel.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 import SwiftUI
 import Combine
@@ -21,6 +29,7 @@ final class TimerViewModel {
     var totalTime: TimeInterval = 0
     var completedFocusSessions: Int = 0
     var currentTaskID: UUID? = nil
+    var currentTaskTitle: String = ""
     var isFocusModeRequested: Bool = false
 
     // MARK: - Computed
@@ -45,11 +54,9 @@ final class TimerViewModel {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
-    var nextSessionLabel: String {
-        nextSession.displayName
-    }
+    var nextSessionLabel: String { nextSession.displayName }
 
-    private var nextSession: SessionType {
+    var nextSession: SessionType {
         switch currentSession {
         case .focus:
             let next = completedFocusSessions + 1
@@ -57,6 +64,19 @@ final class TimerViewModel {
         case .shortBreak, .longBreak:
             return .focus
         }
+    }
+
+    var currentSessionNumber: Int {
+        (completedFocusSessions % settings.sessionsBeforeLongBreak) + 1
+    }
+
+    var totalSessionsPerCycle: Int {
+        settings.sessionsBeforeLongBreak
+    }
+
+    var nextSessionDurationLabel: String {
+        let mins = Int(settings.duration(for: nextSession)) / 60
+        return "\(mins) min"
     }
 
     // MARK: - Session info chips
@@ -69,17 +89,66 @@ final class TimerViewModel {
 
     private var timer: AnyCancellable?
     private var sessionStartDate: Date?
+    private var pauseStartDate: Date?
+    private var totalPausedDuration: TimeInterval = 0
     private var modelContext: ModelContext?
     private let settings = AppSettings.shared
     private let notifications = NotificationService.shared
     private let haptics = HapticService.shared
     private let sounds = SoundService.shared
+    #if os(iOS)
+    private let liveActivity = LiveActivityManager.shared
+    #endif
 
     // MARK: - Init
 
     init() {
         resetToCurrentSession()
+        #if os(iOS)
+        setupLiveActivityBackgroundHandling()
+        #endif
     }
+
+    #if os(iOS)
+    private func setupLiveActivityBackgroundHandling() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleAppResigningActive()
+        }
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleAppBecameActive()
+        }
+    }
+
+    private func handleAppBecameActive() {
+        guard timerState == .running || timerState == .paused else { return }
+        syncTimeRemaining()
+        if timerState == .running {
+            liveActivity.update(
+                timeRemaining: timeRemaining,
+                totalTime: totalTime,
+                isRunning: true
+            )
+        }
+    }
+
+    private func handleAppResigningActive() {
+        guard timerState == .running || timerState == .paused else { return }
+        syncTimeRemaining()
+        liveActivity.update(
+            timeRemaining: timeRemaining,
+            totalTime: totalTime,
+            isRunning: false
+        )
+    }
+    #endif
 
     func setModelContext(_ ctx: ModelContext) {
         self.modelContext = ctx
@@ -91,8 +160,29 @@ final class TimerViewModel {
         guard timerState == .idle || timerState == .paused else { return }
         if timerState == .idle {
             sessionStartDate = Date()
+            totalPausedDuration = 0
             sounds.playSessionStart(session: currentSession)
             haptics.impact(.medium)
+            #if os(iOS)
+            liveActivity.start(
+                taskTitle: currentTaskTitle,
+                session: currentSession,
+                duration: totalTime
+            )
+            #endif
+        } else {
+            if let pauseStart = pauseStartDate {
+                totalPausedDuration += Date().timeIntervalSince(pauseStart)
+                pauseStartDate = nil
+            }
+            syncTimeRemaining()
+            #if os(iOS)
+            liveActivity.update(
+                timeRemaining: timeRemaining,
+                totalTime: totalTime,
+                isRunning: true
+            )
+            #endif
         }
         timerState = .running
         scheduleNotification()
@@ -102,23 +192,47 @@ final class TimerViewModel {
     func pause() {
         guard timerState == .running else { return }
         timerState = .paused
+        pauseStartDate = Date()
         stopTicking()
         cancelNotification()
         haptics.impact(.light)
+        syncTimeRemaining()
+        #if os(iOS)
+        liveActivity.update(
+            timeRemaining: timeRemaining,
+            totalTime: totalTime,
+            isRunning: false
+        )
+        #endif
     }
 
     func resume() {
         guard timerState == .paused else { return }
+        if let pauseStart = pauseStartDate {
+            totalPausedDuration += Date().timeIntervalSince(pauseStart)
+            pauseStartDate = nil
+        }
         timerState = .running
         scheduleNotification()
         startTicking()
         haptics.impact(.light)
+        syncTimeRemaining()
+        #if os(iOS)
+        liveActivity.update(
+            timeRemaining: timeRemaining,
+            totalTime: totalTime,
+            isRunning: true
+        )
+        #endif
     }
 
     func skip() {
         stopTicking()
         cancelNotification()
         haptics.impact(.medium)
+        #if os(iOS)
+        liveActivity.end()
+        #endif
         advanceToNextSession()
     }
 
@@ -128,6 +242,9 @@ final class TimerViewModel {
         timerState = .idle
         resetToCurrentSession()
         haptics.impact(.medium)
+        #if os(iOS)
+        liveActivity.end()
+        #endif
     }
 
     func toggleFocusMode() {
@@ -135,6 +252,12 @@ final class TimerViewModel {
     }
 
     // MARK: - Private Helpers
+
+    private func syncTimeRemaining() {
+        guard let start = sessionStartDate else { return }
+        let elapsed = Date().timeIntervalSince(start) - totalPausedDuration
+        timeRemaining = max(0, totalTime - elapsed)
+    }
 
     private func startTicking() {
         stopTicking()
@@ -149,10 +272,21 @@ final class TimerViewModel {
     }
 
     private func tick() {
-        guard timerState == .running else { return }
-        if timeRemaining > 0 {
-            timeRemaining -= 1
-        } else {
+        guard timerState == .running, let start = sessionStartDate else { return }
+        let elapsed = Date().timeIntervalSince(start) - totalPausedDuration
+        let remaining = max(0, totalTime - elapsed)
+
+        timeRemaining = remaining
+
+        #if os(iOS)
+        liveActivity.update(
+            timeRemaining: max(0, ceil(remaining)),
+            totalTime: totalTime,
+            isRunning: true
+        )
+        #endif
+
+        if remaining <= 0 {
             sessionCompleted()
         }
     }
@@ -167,6 +301,10 @@ final class TimerViewModel {
         if currentSession == .focus {
             completedFocusSessions += 1
         }
+
+        #if os(iOS)
+        liveActivity.end()
+        #endif
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             guard let self else { return }

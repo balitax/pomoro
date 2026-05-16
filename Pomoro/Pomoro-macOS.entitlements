@@ -2,18 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Sandbox (Mac App Store) -->
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
-
-    <!-- Supabase butuh network keluar -->
-    <key>com.apple.security.network.client</key>
-    <true/>
-
-    <!-- App Group: shared UserDefaults dengan widget -->
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>group.id.gus.pomoro</string>
-    </array>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.gus.pomoro</string>
+	</array>
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>

@@ -1,3 +1,11 @@
+//
+//  AuthService.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 import Supabase
 import CryptoKit
@@ -17,7 +25,9 @@ final class AuthService: NSObject {
     static let shared = AuthService()
 
     var currentUser: User? = nil
-    var isSignedIn: Bool { currentUser != nil }
+    // TODO: Remove before release
+    var _devBypass: Bool = false
+    var isSignedIn: Bool { currentUser != nil || _devBypass }
     var isLoading: Bool = false
     var error: String? = nil
 

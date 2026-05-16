@@ -1,83 +1,78 @@
+//
+//  OnboardingView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
+
+// MARK: - Onboarding Root
 
 struct OnboardingView: View {
     @Binding var hasSeenOnboarding: Bool
     @State private var currentPage = 0
-    @State private var isAnimating = false
 
     private let pages = OnboardingPage.allPages
 
     var body: some View {
-        ZStack {
-            // Gradient background
-            LinearGradient(
-                colors: [Color(hex: "#0E0E0F"), Color(hex: "#1A1A1C")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
 
-            VStack(spacing: 0) {
-                // Skip button
-                HStack {
-                    Spacer()
-                    if currentPage < pages.count - 1 {
-                        Button("Skip") {
-                            withAnimation(PDS.Animation.smooth) {
-                                hasSeenOnboarding = true
-                            }
-                        }
-                        .font(PDS.Typography.callout)
-                        .foregroundStyle(.secondary)
-                        .padding()
+            // Skip
+            HStack {
+                Spacer()
+                if currentPage < pages.count - 1 {
+                    Button("Skip") {
+                        hasSeenOnboarding = true
                     }
+                    .foregroundStyle(.secondary)
                 }
-
-                // Page content
-                TabView(selection: $currentPage) {
-                    ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
-                        OnboardingPageView(page: page)
-                            .tag(index)
-                    }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(PDS.Animation.smooth, value: currentPage)
-
-                // Page dots
-                HStack(spacing: 8) {
-                    ForEach(0..<pages.count, id: \.self) { i in
-                        Capsule()
-                            .fill(i == currentPage ? PDS.Colors.focusRed : Color.secondary.opacity(0.3))
-                            .frame(width: i == currentPage ? 20 : 7, height: 7)
-                            .animation(PDS.Animation.spring, value: currentPage)
-                    }
-                }
-                .padding(.bottom, PDS.Spacing.xl)
-
-                // CTA button
-                Button {
-                    withAnimation(PDS.Animation.spring) {
-                        if currentPage < pages.count - 1 {
-                            currentPage += 1
-                        } else {
-                            hasSeenOnboarding = true
-                        }
-                    }
-                } label: {
-                    Text(currentPage < pages.count - 1 ? "Continue" : "Get Started")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(
-                            pages[currentPage].accentColor,
-                            in: RoundedRectangle(cornerRadius: PDS.Radius.large, style: .continuous)
-                        )
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .padding(.horizontal, PDS.Spacing.xl)
-                .padding(.bottom, PDS.Spacing.xxl)
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
+            .frame(height: 48)
+
+            // Page content
+            OnboardingPageView(page: pages[currentPage])
+                .id(currentPage)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal:   .move(edge: .leading).combined(with: .opacity)
+                ))
+                .animation(.easeInOut(duration: 0.28), value: currentPage)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Dot indicators
+            HStack(spacing: 8) {
+                ForEach(0..<pages.count, id: \.self) { i in
+                    Capsule()
+                        .fill(i == currentPage ? Color.accentColor : Color.secondary.opacity(0.25))
+                        .frame(width: i == currentPage ? 20 : 7, height: 7)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentPage)
+                }
+            }
+            .padding(.bottom, 20)
+
+            // CTA button
+            Button {
+                withAnimation {
+                    if currentPage < pages.count - 1 {
+                        currentPage += 1
+                    } else {
+                        hasSeenOnboarding = true
+                    }
+                }
+            } label: {
+                Text(currentPage < pages.count - 1 ? "Continue" : "Get Started")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 40)
         }
     }
 }
@@ -86,87 +81,99 @@ struct OnboardingView: View {
 
 struct OnboardingPageView: View {
     let page: OnboardingPage
-    @State private var appeared = false
 
     var body: some View {
-        VStack(spacing: PDS.Spacing.xl) {
+        VStack(spacing: 28) {
             Spacer()
 
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(page.accentColor.opacity(0.12))
-                    .frame(width: 140, height: 140)
+            Image(systemName: page.icon)
+                .font(.system(size: 72, weight: .thin))
+                .foregroundStyle(.tint)
+                .symbolRenderingMode(.hierarchical)
 
-                Image(systemName: page.systemImage)
-                    .font(.system(size: 56, weight: .light))
-                    .foregroundStyle(page.accentColor)
-                    .symbolEffect(.pulse, isActive: appeared)
-            }
-            .scaleEffect(appeared ? 1 : 0.6)
-            .opacity(appeared ? 1 : 0)
-            .animation(PDS.Animation.bouncy.delay(0.1), value: appeared)
-
-            // Text
-            VStack(spacing: PDS.Spacing.sm) {
+            VStack(spacing: 12) {
                 Text(page.title)
-                    .font(PDS.Typography.title1)
-                    .foregroundStyle(.primary)
+                    .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
-                    .offset(y: appeared ? 0 : 20)
-                    .opacity(appeared ? 1 : 0)
-                    .animation(PDS.Animation.smooth.delay(0.2), value: appeared)
 
                 Text(page.subtitle)
-                    .font(PDS.Typography.body)
+                    .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .offset(y: appeared ? 0 : 20)
-                    .opacity(appeared ? 1 : 0)
-                    .animation(PDS.Animation.smooth.delay(0.3), value: appeared)
+                    .padding(.horizontal, 32)
             }
-            .padding(.horizontal, PDS.Spacing.xl)
 
             Spacer()
+            Spacer()
         }
-        .onAppear { appeared = true }
-        .onDisappear { appeared = false }
     }
 }
 
-// MARK: - Onboarding Page Model
+// MARK: - Page Model
 
 struct OnboardingPage {
     let title: String
     let subtitle: String
-    let systemImage: String
-    let accentColor: Color
+    let icon: String
 
     static let allPages: [OnboardingPage] = [
         OnboardingPage(
-            title: "Deep Focus,\nBetter Work",
-            subtitle: "Use the Pomodoro technique to build focused work sessions and regular breaks.",
-            systemImage: "flame.fill",
-            accentColor: PDS.Colors.focusRed
+            title: "Focus on What Matters",
+            subtitle: "Use the proven Pomodoro technique to work deeply and recharge intentionally.",
+            icon: "timer"
         ),
         OnboardingPage(
-            title: "Track Your\nProgress",
-            subtitle: "See how many pomodoros you complete each day and build a powerful streak.",
-            systemImage: "chart.bar.fill",
-            accentColor: PDS.Colors.longBreakBlue
+            title: "Manage Your Tasks",
+            subtitle: "Capture what needs to get done and link tasks directly to your focus sessions.",
+            icon: "checklist"
         ),
         OnboardingPage(
-            title: "Link Tasks\nto Sessions",
-            subtitle: "Stay intentional by connecting your tasks to each focus session.",
-            systemImage: "checklist.checked",
-            accentColor: PDS.Colors.breakGreen
+            title: "Track Your Progress",
+            subtitle: "Daily streaks and insightful charts keep you motivated and on track.",
+            icon: "chart.bar.fill"
         ),
-        OnboardingPage(
-            title: "Works on\niPhone & Mac",
-            subtitle: "Your sessions, tasks, and stats sync seamlessly across all your devices.",
-            systemImage: "iphone.and.ipad",
-            accentColor: Color.purple
-        )
     ]
+}
+
+// MARK: - Shared Shapes (used by SignInView)
+
+struct ClockHand: View {
+    let length: CGFloat
+    let width: CGFloat
+    let color: Color
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: width / 2)
+            .fill(color)
+            .frame(width: width, height: length)
+            .offset(y: -length / 2)
+    }
+}
+
+struct LeafShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addQuadCurve(
+            to: CGPoint(x: rect.maxX, y: rect.midY),
+            control: CGPoint(x: rect.maxX, y: rect.minY)
+        )
+        path.addQuadCurve(
+            to: CGPoint(x: rect.midX, y: rect.maxY),
+            control: CGPoint(x: rect.maxX, y: rect.maxY)
+        )
+        path.addQuadCurve(
+            to: CGPoint(x: rect.minX, y: rect.midY),
+            control: CGPoint(x: rect.minX, y: rect.maxY)
+        )
+        path.addQuadCurve(
+            to: CGPoint(x: rect.midX, y: rect.minY),
+            control: CGPoint(x: rect.minX, y: rect.minY)
+        )
+        return path
+    }
+}
+
+#Preview {
+    OnboardingView(hasSeenOnboarding: .constant(false))
 }

@@ -1,3 +1,11 @@
+//
+//  TaskRowView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 
 struct TaskRowView: View {

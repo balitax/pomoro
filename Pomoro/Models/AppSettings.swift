@@ -1,3 +1,11 @@
+//
+//  AppSettings.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 import SwiftUI
 import Combine
@@ -10,6 +18,7 @@ final class AppSettings: ObservableObject {
     @AppStorage("shortBreakDuration") var shortBreakDuration: Double = 5
     @AppStorage("longBreakDuration") var longBreakDuration: Double = 15
     @AppStorage("sessionsBeforeLongBreak") var sessionsBeforeLongBreak: Int = 4
+    @AppStorage("dailyGoal")              var dailyGoal: Int             = 8
 
     // MARK: - Behavior
     @AppStorage("autoStartBreaks")   var autoStartBreaks: Bool    = false

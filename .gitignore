@@ -31,3 +31,5 @@ Pomoro/Config/PomoroConfig.swift
 # CocoaPods (kalau nanti dipakai)
 Pods/
 Podfile.lock
+group.id.gus.pomoro
+.claude/

@@ -1,182 +1,267 @@
+//
+//  TimerView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 import SwiftData
 
 struct TimerView: View {
     @Environment(TimerViewModel.self) private var timerVM
-    @Environment(TaskViewModel.self) private var taskVM
-    @Environment(\.modelContext) private var modelContext
+    @Environment(TaskViewModel.self)  private var taskVM
+    @Environment(\.modelContext)      private var modelContext
 
-    @State private var animateRing = false
     @State private var showTaskPicker = false
-    @State private var pulseScale: CGFloat = 1.0
+    @State private var showInfo       = false
+    @State private var appeared       = false
 
     var body: some View {
-        ZStack {
-            // Ambient background
-            sessionBackground
-                .ignoresSafeArea()
-                .animation(PDS.Animation.smooth, value: timerVM.currentSession)
+        ScrollView {
+            VStack(spacing: 28) {
+                // Ring section
+                ringSection
+                    .offset(y: appeared ? 0 : 24)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.05), value: appeared)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    Spacer(minLength: 60)
+                // Controls — slide up when active
+                if !timerVM.isIdle {
+                    controlsRow
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
 
-                    // Session type header
-                    sessionHeader
-                        .padding(.bottom, PDS.Spacing.lg)
+                // Up Next
+                upNextCard
+                    .offset(y: appeared ? 0 : 32)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.15), value: appeared)
 
-                    // Main timer ring
-                    CircularTimerView()
-                        .padding(.bottom, PDS.Spacing.lg)
-
-                    // Session dots (progress through pomodoro cycle)
-                    sessionDotsView
-                        .padding(.bottom, PDS.Spacing.xl)
-
-                    // Controls
-                    SessionControlsView()
-                        .padding(.horizontal, PDS.Spacing.lg)
-                        .padding(.bottom, PDS.Spacing.lg)
-
-                    // Active task card
-                    if let task = taskVM.selectedTask {
-                        activeTaskCard(task)
-                            .padding(.horizontal, PDS.Spacing.lg)
-                            .padding(.bottom, PDS.Spacing.md)
-                    } else {
-                        pickTaskButton
-                            .padding(.horizontal, PDS.Spacing.lg)
-                            .padding(.bottom, PDS.Spacing.md)
-                    }
-
-                    Spacer(minLength: 100)
+                // Task
+                taskSection
+                    .offset(y: appeared ? 0 : 32)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.2), value: appeared)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 100)
+            .animation(.spring(response: 0.4, dampingFraction: 0.75), value: timerVM.isIdle)
+        }
+        .background(Color(.systemGroupedBackground))
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showInfo = true } label: {
+                    Image(systemName: "info.circle")
                 }
             }
         }
         .onAppear {
             timerVM.setModelContext(modelContext)
+            appeared = true
+        }
+        .onChange(of: taskVM.selectedTask?.id) { _, newID in
+            timerVM.currentTaskID = newID
+            timerVM.currentTaskTitle = taskVM.selectedTask?.title ?? ""
         }
         .sheet(isPresented: $showTaskPicker) {
             TaskPickerSheet(isPresented: $showTaskPicker)
                 .environment(taskVM)
         }
-    }
-
-    // MARK: - Background
-
-    private var sessionBackground: some View {
-        ZStack {
-            Color(hex: "#0A0A0B")
-
-            // Radial glow based on session
-            RadialGradient(
-                colors: [
-                    timerVM.currentSession.color.opacity(timerVM.isRunning ? 0.18 : 0.08),
-                    Color.clear
-                ],
-                center: .center,
-                startRadius: 0,
-                endRadius: 400
-            )
-            .scaleEffect(pulseScale)
-            .animation(
-                timerVM.isRunning
-                    ? .easeInOut(duration: 2).repeatForever(autoreverses: true)
-                    : .easeInOut(duration: 0.5),
-                value: pulseScale
-            )
-        }
-        .onChange(of: timerVM.isRunning) { _, running in
-            pulseScale = running ? 1.15 : 1.0
+        .sheet(isPresented: $showInfo) {
+            InfoView()
         }
     }
 
-    // MARK: - Session Header
+    // MARK: - Ring Section
 
-    private var sessionHeader: some View {
-        VStack(spacing: PDS.Spacing.xs) {
-            Text(timerVM.currentSession.shortName)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .tracking(2)
+    private var ringSection: some View {
+        VStack(spacing: 20) {
+            // Session badge
+            Text(timerVM.currentSession.displayName)
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(timerVM.currentSession.color)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(timerVM.currentSession.color.opacity(0.1),
+                            in: Capsule())
+                .animation(.easeInOut(duration: 0.3), value: timerVM.currentSession)
 
-            if !timerVM.isRunning && !timerVM.isPaused {
-                Text("Next: \(timerVM.nextSessionLabel)")
-                    .font(PDS.Typography.caption)
-                    .foregroundStyle(.secondary)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+            // Ring
+            CircularTimerView()
+
+            // Dots + session info
+            VStack(spacing: 8) {
+                // Progress dots
+                HStack(spacing: 8) {
+                    ForEach(0..<timerVM.totalSessionsPerCycle, id: \.self) { i in
+                        Circle()
+                            .fill(timerVM.sessionDots.indices.contains(i) && timerVM.sessionDots[i]
+                                  ? timerVM.currentSession.color
+                                  : Color(.systemFill))
+                            .frame(width: 8, height: 8)
+                            .scaleEffect(timerVM.sessionDots.indices.contains(i) && timerVM.sessionDots[i] ? 1.15 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: timerVM.completedFocusSessions)
+                    }
+                }
+
+                // Session label
+                HStack(spacing: 6) {
+                    Text("\(timerVM.currentSession.displayName) session")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("·")
+                        .foregroundStyle(.tertiary)
+                    Text("\(timerVM.currentSessionNumber) of \(timerVM.totalSessionsPerCycle)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .animation(.easeInOut(duration: 0.3), value: timerVM.currentSession)
             }
         }
-        .animation(PDS.Animation.smooth, value: timerVM.isRunning)
     }
 
-    // MARK: - Session Dots
+    // MARK: - Controls Row (reset + skip)
 
-    private var sessionDotsView: some View {
-        HStack(spacing: 6) {
-            ForEach(Array(timerVM.sessionDots.enumerated()), id: \.offset) { _, completed in
-                Circle()
-                    .fill(completed ? timerVM.currentSession.color : timerVM.currentSession.color.opacity(0.2))
-                    .frame(width: 7, height: 7)
-                    .animation(PDS.Animation.spring, value: completed)
-            }
-        }
-    }
-
-    // MARK: - Active Task Card
-
-    private func activeTaskCard(_ task: PomodoroTask) -> some View {
-        HStack(spacing: PDS.Spacing.md) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 18))
-                .foregroundStyle(timerVM.currentSession.color)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
-                    .font(PDS.Typography.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-
-                Text("\(task.completedPomodoros)/\(task.estimatedPomodoros) pomodoros")
-                    .font(PDS.Typography.caption)
-                    .foregroundStyle(.secondary)
-            }
-
+    private var controlsRow: some View {
+        HStack {
             Spacer()
 
             Button {
-                taskVM.selectForTimer(nil)
+                timerVM.reset()
             } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 18))
+                VStack(spacing: 5) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 20, weight: .regular))
+                    Text("Reset")
+                        .font(.caption)
+                }
+                .foregroundStyle(.secondary)
+                .frame(width: 64)
             }
+            .buttonStyle(SpringButtonStyle())
+
+            Spacer()
+            Spacer()
+
+            Button {
+                timerVM.skip()
+            } label: {
+                VStack(spacing: 5) {
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 20, weight: .regular))
+                    Text("Skip")
+                        .font(.caption)
+                }
+                .foregroundStyle(.secondary)
+                .frame(width: 64)
+            }
+            .buttonStyle(SpringButtonStyle())
+
+            Spacer()
         }
-        .padding(PDS.Spacing.md)
-        .glassBackground(cornerRadius: PDS.Radius.medium)
-        .transition(.scale.combined(with: .opacity))
-        .animation(PDS.Animation.spring, value: task.id)
+        .padding(.top, 4)
     }
 
-    // MARK: - Pick Task Button
+    // MARK: - Up Next Card
 
-    private var pickTaskButton: some View {
-        Button {
-            showTaskPicker = true
-        } label: {
-            HStack(spacing: PDS.Spacing.sm) {
-                Image(systemName: "plus.circle")
-                    .font(.system(size: 16))
-                Text("Link a task")
-                    .font(PDS.Typography.callout)
+    private var upNextCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Up Next")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(timerVM.nextSession.color.opacity(0.12))
+                        .frame(width: 46, height: 46)
+                    Image(systemName: timerVM.nextSession.systemImage)
+                        .font(.system(size: 19))
+                        .foregroundStyle(timerVM.nextSession.color)
+                }
+                .animation(.easeInOut(duration: 0.3), value: timerVM.nextSession)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(timerVM.nextSession.displayName)
+                        .font(.body.weight(.medium))
+                    Text(timerVM.nextSessionDurationLabel)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .animation(.easeInOut(duration: 0.3), value: timerVM.nextSession)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color(.tertiaryLabel))
             }
-            .foregroundStyle(.secondary)
-            .padding(PDS.Spacing.md)
-            .frame(maxWidth: .infinity)
-            .glassBackground(cornerRadius: PDS.Radius.medium)
+            .padding(16)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .buttonStyle(.plain)
+    }
+
+    // MARK: - Task Section
+
+    @ViewBuilder
+    private var taskSection: some View {
+        if let task = taskVM.selectedTask {
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(timerVM.currentSession.color)
+                    .font(.system(size: 20))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.title)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
+                    Text("\(task.completedPomodoros) / \(task.estimatedPomodoros) sessions")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        taskVM.selectForTimer(nil)
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color(.tertiaryLabel))
+                        .font(.system(size: 20))
+                }
+            }
+            .padding(16)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .transition(.scale(scale: 0.95).combined(with: .opacity))
+        } else {
+            Button {
+                showTaskPicker = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle")
+                    Text("Link a task")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+            .transition(.opacity)
+        }
     }
 }
 
@@ -199,10 +284,10 @@ struct TaskPickerSheet: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(task.title)
-                                .font(PDS.Typography.body)
+                                .font(.body)
                                 .foregroundStyle(.primary)
                             Text("\(task.remainingPomodoros) pomodoros remaining")
-                                .font(PDS.Typography.caption)
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -214,7 +299,9 @@ struct TaskPickerSheet: View {
                 .buttonStyle(.plain)
             }
             .navigationTitle("Choose Task")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { isPresented = false }
@@ -230,7 +317,15 @@ struct TaskPickerSheet: View {
                 }
             }
         }
+        #if os(iOS)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        #endif
     }
+}
+
+#Preview {
+    TimerView()
+        .environment(TimerViewModel())
+        .environment(TaskViewModel())
 }

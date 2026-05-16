@@ -1,3 +1,11 @@
+//
+//  PomoroApp.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -8,6 +16,9 @@ struct PomoroApp: App {
 
     @State private var authService  = AuthService.shared
     @State private var syncService  = SyncService.shared
+    @State private var timerVM      = TimerViewModel()
+    @State private var taskVM       = TaskViewModel()
+    @State private var statsVM      = StatisticsViewModel()
 
     let container: ModelContainer
 
@@ -24,37 +35,49 @@ struct PomoroApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            Group {
-                if !hasSeenOnboarding {
-                    OnboardingView(hasSeenOnboarding: $hasSeenOnboarding)
-                } else if !authService.isSignedIn {
-                    SignInView()
-                } else {
-                    ContentView()
-                }
-            }
-            .animation(.easeInOut(duration: 0.4), value: hasSeenOnboarding)
-            .animation(.easeInOut(duration: 0.35), value: authService.isSignedIn)
-            .modelContainer(container)
-            .environment(authService)
-            .environment(syncService)
-            .task { await setupSync() }
-        }
         #if os(macOS)
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
+        WindowGroup { rootContent }
+            .windowStyle(.hiddenTitleBar)
+            .windowResizability(.contentSize)
 
         MenuBarExtra {
             MenuBarView()
                 .modelContainer(container)
+                .environment(timerVM)
+                .environment(taskVM)
                 .environment(authService)
                 .environment(syncService)
         } label: {
             MenuBarLabel()
+                .environment(timerVM)
         }
         .menuBarExtraStyle(.window)
+        #else
+        WindowGroup { rootContent }
         #endif
+    }
+
+    @MainActor @ViewBuilder
+    private var rootContent: some View {
+        Group {
+            if !hasSeenOnboarding {
+                OnboardingView(hasSeenOnboarding: $hasSeenOnboarding)
+            } else if !authService.isSignedIn {
+                SignInView()
+            } else {
+                ContentView()
+            }
+        }
+        .preferredColorScheme(.light)
+        .animation(.easeInOut(duration: 0.4), value: hasSeenOnboarding)
+        .animation(.easeInOut(duration: 0.35), value: authService.isSignedIn)
+        .modelContainer(container)
+        .environment(timerVM)
+        .environment(taskVM)
+        .environment(statsVM)
+        .environment(authService)
+        .environment(syncService)
+        .task { await setupSync() }
     }
 
     // MARK: - Sync Setup
@@ -64,10 +87,14 @@ struct PomoroApp: App {
         // Listen ke perubahan auth state
         authService.startListening()
 
+        // Inject ModelContext ke ViewModels
+        let ctx = container.mainContext
+        timerVM.setModelContext(ctx)
+        taskVM.setModelContext(ctx)
+
         guard authService.isSignedIn else { return }
 
         // Inject ModelContext ke SyncService
-        let ctx = container.mainContext
         syncService.setModelContext(ctx)
 
         // Pull data terbaru dari Supabase

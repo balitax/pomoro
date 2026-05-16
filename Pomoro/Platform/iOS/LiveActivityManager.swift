@@ -1,59 +1,60 @@
+//
+//  LiveActivityManager.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 #if os(iOS)
 import Foundation
 import ActivityKit
 import SwiftUI
-
-// MARK: - Live Activity Attributes
-
-struct PomoroActivityAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        var timeRemaining: TimeInterval
-        var totalTime: TimeInterval
-        var sessionType: String
-        var isRunning: Bool
-
-        var progress: Double {
-            guard totalTime > 0 else { return 0 }
-            return 1.0 - (timeRemaining / totalTime)
-        }
-
-        var timeDisplayString: String {
-            let minutes = Int(timeRemaining) / 60
-            let seconds = Int(timeRemaining) % 60
-            return String(format: "%02d:%02d", minutes, seconds)
-        }
-    }
-
-    var taskTitle: String
-}
 
 // MARK: - Live Activity Manager
 
 @Observable
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
-    private init() {}
+    private init() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.endOnAppTermination()
+        }
+    }
 
     private var activity: Activity<PomoroActivityAttributes>?
+    private var currentSessionType: String = "focus"
+    private var currentTaskTitle: String = ""
 
     func start(taskTitle: String, session: SessionType, duration: TimeInterval) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        currentSessionType = session.rawValue
+        currentTaskTitle   = taskTitle
 
         let attributes = PomoroActivityAttributes(taskTitle: taskTitle)
         let state = PomoroActivityAttributes.ContentState(
             timeRemaining: duration,
             totalTime: duration,
             sessionType: session.rawValue,
-            isRunning: true
+            isRunning: true,
+            taskTitle: taskTitle
         )
+
+        let endDate = Date().addingTimeInterval(duration)
 
         do {
             activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: state, staleDate: nil),
+                content: .init(state: state, staleDate: endDate),
                 pushType: nil
             )
-        } catch {}
+        } catch {
+            print("[LiveActivityManager] Failed to start: \(error.localizedDescription)")
+        }
     }
 
     func update(timeRemaining: TimeInterval, totalTime: TimeInterval, isRunning: Bool) {
@@ -61,18 +62,29 @@ final class LiveActivityManager {
         let state = PomoroActivityAttributes.ContentState(
             timeRemaining: timeRemaining,
             totalTime: totalTime,
-            sessionType: activity.attributes.taskTitle,
-            isRunning: isRunning
+            sessionType: currentSessionType,
+            isRunning: isRunning,
+            taskTitle: currentTaskTitle
         )
+        let staleDate = Date().addingTimeInterval(timeRemaining)
         Task {
-            await activity.update(.init(state: state, staleDate: nil))
+            await activity.update(.init(state: state, staleDate: staleDate))
         }
     }
 
     func end() {
+        let current = activity
+        activity = nil
         Task {
-            await activity?.end(nil, dismissalPolicy: .immediate)
-            activity = nil
+            await current?.end(nil, dismissalPolicy: .immediate)
+        }
+    }
+
+    func endOnAppTermination() {
+        let current = activity
+        activity = nil
+        Task {
+            await current?.end(nil, dismissalPolicy: .immediate)
         }
     }
 }

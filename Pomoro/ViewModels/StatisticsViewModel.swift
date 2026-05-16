@@ -1,3 +1,11 @@
+//
+//  StatisticsViewModel.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 import SwiftUI
 import SwiftData
@@ -7,6 +15,7 @@ import Charts
 final class StatisticsViewModel {
 
     var sessions: [PomodoroSession] = []
+    private let settings = AppSettings.shared
 
     // MARK: - Computed Stats
 
@@ -28,10 +37,25 @@ final class StatisticsViewModel {
         }.count
     }
 
+    var dailyGoal: Int { settings.dailyGoal }
+
+    var dailyGoalProgress: Double {
+        guard settings.dailyGoal > 0 else { return 0 }
+        return min(1.0, Double(completedTodayCount) / Double(settings.dailyGoal))
+    }
+
     var currentStreak: Int {
         var streak = 0
-        var date = Calendar.current.startOfDay(for: Date())
         let calendar = Calendar.current
+        // If today has no completed session yet, start streak check from yesterday
+        // so we don't penalise users who haven't started today yet.
+        let todayStart = calendar.startOfDay(for: Date())
+        let tomorrowStart = calendar.date(byAdding: .day, value: 1, to: todayStart)!
+        let todayDone = sessions.contains {
+            $0.type == .focus && $0.wasCompleted &&
+            $0.startedAt >= todayStart && $0.startedAt < tomorrowStart
+        }
+        var date = todayDone ? todayStart : calendar.date(byAdding: .day, value: -1, to: todayStart)!
 
         while true {
             let dayStart = date

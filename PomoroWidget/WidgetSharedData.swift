@@ -1,9 +1,47 @@
+//
+//  WidgetSharedData.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import Foundation
 import WidgetKit
+#if canImport(ActivityKit)
+import ActivityKit
+#endif
+
+// MARK: - Live Activity Attributes (shared between App and Widget)
+
+#if canImport(ActivityKit)
+struct PomoroActivityAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var timeRemaining: TimeInterval
+        var totalTime: TimeInterval
+        var sessionType: String   // "focus" | "short_break" | "long_break"
+        var isRunning: Bool
+        var taskTitle: String
+
+        var progress: Double {
+            guard totalTime > 0 else { return 0 }
+            return 1.0 - (timeRemaining / totalTime)
+        }
+
+        var timeDisplayString: String {
+            let minutes = Int(timeRemaining) / 60
+            let seconds = Int(timeRemaining) % 60
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
+    }
+
+    var taskTitle: String
+}
+#endif
 
 // MARK: - Shared data between App and Widget via App Group
 
-let appGroupID = "group.id.gus.pomoro"
+let appGroupID = "group.com.gus.pomoro"
 
 struct WidgetTimerEntry: TimelineEntry {
     let date: Date

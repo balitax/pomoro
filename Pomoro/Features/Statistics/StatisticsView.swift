@@ -1,3 +1,11 @@
+//
+//  StatisticsView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 import SwiftData
 import Charts
@@ -30,7 +38,9 @@ struct StatisticsView: View {
                 }
             }
             .navigationTitle("Statistics")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
+            #endif
         }
         .onAppear {
             statsVM.load(sessions: allSessions)
@@ -46,13 +56,11 @@ struct StatisticsView: View {
         VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
             sectionTitle("Today")
 
+            // Daily Goal card
+            dailyGoalCard
+
+            // Stat chips row
             HStack(spacing: PDS.Spacing.md) {
-                StatCard(
-                    value: "\(statsVM.completedTodayCount)",
-                    label: "Pomodoros",
-                    icon: "flame.fill",
-                    color: PDS.Colors.focusRed
-                )
                 StatCard(
                     value: statsVM.totalFocusTodayFormatted,
                     label: "Focus Time",
@@ -62,11 +70,78 @@ struct StatisticsView: View {
                 StatCard(
                     value: "\(statsVM.currentStreak)",
                     label: "Day Streak",
-                    icon: "bolt.fill",
+                    icon: "flame.fill",
                     color: Color.orange
                 )
             }
         }
+    }
+
+    // MARK: - Daily Goal Card
+
+    private var dailyGoalCard: some View {
+        HStack(spacing: 20) {
+            // Progress ring
+            ZStack {
+                Circle()
+                    .stroke(PDS.Colors.focusRed.opacity(0.12), lineWidth: 10)
+                    .frame(width: 84, height: 84)
+                Circle()
+                    .trim(from: 0, to: statsVM.dailyGoalProgress)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color(hex: "#FF6B6B"), PDS.Colors.focusRed],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 84, height: 84)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.75),
+                               value: statsVM.dailyGoalProgress)
+
+                VStack(spacing: 0) {
+                    Text("\(statsVM.completedTodayCount)")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                    Text("/ \(statsVM.dailyGoal)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: PDS.Spacing.sm) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Daily Goal")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text(statsVM.dailyGoalProgress >= 1
+                         ? "Goal reached! 🎉"
+                         : "\(statsVM.dailyGoal - statsVM.completedTodayCount) sessions to go")
+                        .font(.caption)
+                        .foregroundStyle(statsVM.dailyGoalProgress >= 1
+                                         ? PDS.Colors.breakGreen
+                                         : Color.secondary)
+                }
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(PDS.Colors.focusRed.opacity(0.12))
+                            .frame(height: 5)
+                        Capsule()
+                            .fill(PDS.Colors.focusRed)
+                            .frame(width: geo.size.width * statsVM.dailyGoalProgress, height: 5)
+                            .animation(.spring(response: 0.6, dampingFraction: 0.75),
+                                       value: statsVM.dailyGoalProgress)
+                    }
+                }
+                .frame(height: 5)
+            }
+
+            Spacer()
+        }
+        .padding(PDS.Spacing.md)
+        .glassBackground()
     }
 
     // MARK: - Weekly Chart

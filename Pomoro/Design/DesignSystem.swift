@@ -1,3 +1,11 @@
+//
+//  DesignSystem.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 
 // MARK: - Pomoro Design System
@@ -9,23 +17,23 @@ enum PDS {
 
     enum Colors {
         // Session States
-        static let focusRed    = Color("FocusRed",      bundle: nil).fallback(Color(hex: "#FF4444"))
-        static let breakGreen  = Color("BreakGreen",    bundle: nil).fallback(Color(hex: "#34C759"))
-        static let longBreakBlue = Color("LongBreakBlue", bundle: nil).fallback(Color(hex: "#007AFF"))
+        static let focusRed      = Color(hex: "#FF4444")
+        static let breakGreen    = Color(hex: "#34C759")
+        static let longBreakBlue = Color(hex: "#007AFF")
 
         // Backgrounds
-        static let background  = Color("Background",    bundle: nil).fallback(Color(hex: "#0E0E0F"))
-        static let surface     = Color("Surface",       bundle: nil).fallback(Color(hex: "#1C1C1E"))
-        static let surfaceElevated = Color("SurfaceElevated", bundle: nil).fallback(Color(hex: "#2C2C2E"))
+        static let background      = Color(hex: "#0E0E0F")
+        static let surface         = Color(hex: "#1C1C1E")
+        static let surfaceElevated = Color(hex: "#2C2C2E")
 
         // Text
-        static let label       = Color.primary
-        static let secondaryLabel = Color.secondary
+        static let label           = Color.primary
+        static let secondaryLabel  = Color.secondary
         static let tertiaryLabel   = Color(hex: "#636366")
 
         // System
-        static let separator   = Color(hex: "#38383A")
-        static let accent      = Color(hex: "#FF4444")
+        static let separator = Color(hex: "#38383A")
+        static let accent    = Color(hex: "#FF4444")
     }
 
     // MARK: - Radius
@@ -163,7 +171,6 @@ extension Color {
         )
     }
 
-    func fallback(_ fallback: Color) -> Color { self }
 }
 
 // MARK: - View Modifiers

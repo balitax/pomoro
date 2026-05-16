@@ -1,10 +1,18 @@
+//
+//  ContentView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @State private var timerVM = TimerViewModel()
-    @State private var taskVM = TaskViewModel()
-    @State private var statsVM = StatisticsViewModel()
+    @Environment(TimerViewModel.self) private var timerVM
+    @Environment(TaskViewModel.self) private var taskVM
+    @Environment(StatisticsViewModel.self) private var statsVM
     @State private var selectedTab: AppTab = .timer
     @State private var showFocusMode = false
 
@@ -16,14 +24,14 @@ struct ContentView: View {
             macOSLayout
             #endif
         }
-        .environment(timerVM)
-        .environment(taskVM)
-        .environment(statsVM)
+        .tint(PDS.Colors.focusRed)
+        #if os(iOS)
         .fullScreenCover(isPresented: $showFocusMode) {
             FocusModeView(isPresented: $showFocusMode)
                 .environment(timerVM)
                 .environment(taskVM)
         }
+        #endif
         .onChange(of: timerVM.isFocusModeRequested) { _, requested in
             if requested {
                 showFocusMode = true
@@ -34,28 +42,33 @@ struct ContentView: View {
 
     // MARK: - iOS Layout
 
+    #if os(iOS)
     @ViewBuilder
     private var iOSLayout: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
-                TimerView()
-                    .tag(AppTab.timer)
-                TaskListView()
-                    .tag(AppTab.tasks)
-                StatisticsView()
-                    .tag(AppTab.stats)
-                SettingsView()
-                    .tag(AppTab.settings)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-
+        TabView(selection: $selectedTab) {
+            NavigationStack { TimerView() }
+                .tag(AppTab.timer)
+            NavigationStack { TaskListView() }
+                .tag(AppTab.tasks)
+            NavigationStack { StatisticsView() }
+                .tag(AppTab.stats)
+            NavigationStack { SettingsView() }
+                .tag(AppTab.settings)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .background(
+            Color(UIColor.systemGroupedBackground)
+                .ignoresSafeArea()
+        )
+        .overlay(alignment: .bottom) {
             PomoroTabBar(selectedTab: $selectedTab)
         }
-        .ignoresSafeArea(edges: .bottom)
     }
+    #endif
 
     // MARK: - macOS Layout
 
+    #if os(macOS)
     @ViewBuilder
     private var macOSLayout: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
@@ -80,12 +93,13 @@ struct ContentView: View {
     @ViewBuilder
     private var macOSDetail: some View {
         switch selectedTab {
-        case .timer: TimerView()
-        case .tasks: TaskListView()
-        case .stats: StatisticsView()
+        case .timer:    TimerView()
+        case .tasks:    TaskListView()
+        case .stats:    StatisticsView()
         case .settings: SettingsView()
         }
     }
+    #endif
 }
 
 // MARK: - App Tab

@@ -1,3 +1,11 @@
+//
+//  MenuBarView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025
+//
+
 #if os(macOS)
 import SwiftUI
 import SwiftData
@@ -22,9 +30,8 @@ struct MenuBarLabel: View {
 // MARK: - Menu Bar Window View
 
 struct MenuBarView: View {
-    @State private var timerVM = TimerViewModel()
-    @State private var taskVM = TaskViewModel()
-    @Environment(\.modelContext) private var modelContext
+    @Environment(TimerViewModel.self) private var timerVM
+    @Environment(TaskViewModel.self) private var taskVM
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,12 +52,6 @@ struct MenuBarView: View {
         }
         .frame(width: 280)
         .background(Color(NSColor.windowBackgroundColor))
-        .environment(timerVM)
-        .environment(taskVM)
-        .onAppear {
-            timerVM.setModelContext(modelContext)
-            taskVM.setModelContext(modelContext)
-        }
     }
 
     // MARK: - Header

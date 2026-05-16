@@ -3,14 +3,17 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 struct FocusModeView: View {
+    @Bindable var store: StoreOf<FocusFeature>
     @Binding var isPresented: Bool
-    @Environment(TimerViewModel.self) private var timerVM
     @Environment(TaskViewModel.self) private var taskVM
 
     @State private var showControls = true
@@ -19,32 +22,25 @@ struct FocusModeView: View {
 
     var body: some View {
         ZStack {
-            // Animated background
             focusBackground
                 .ignoresSafeArea()
-                .onTapGesture {
-                    showControlsTemporarily()
-                }
+                .onTapGesture { showControlsTemporarily() }
 
-            // Content
             VStack(spacing: PDS.Spacing.xl) {
                 Spacer()
 
-                // Session label
-                Text(timerVM.currentSession.shortName)
+                Text(store.currentSession.shortName)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .tracking(3)
-                    .foregroundStyle(timerVM.currentSession.color.opacity(0.8))
+                    .foregroundStyle(store.currentSession.color.opacity(0.8))
 
-                // Large timer
-                Text(timerVM.timeDisplayString)
+                Text(store.timeDisplayString)
                     .font(.system(size: 96, weight: .ultraLight, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.white)
                     .contentTransition(.numericText(countsDown: true))
-                    .animation(PDS.Animation.fast, value: timerVM.timeDisplayString)
+                    .animation(PDS.Animation.fast, value: store.timeDisplayString)
 
-                // Task label if selected
                 if let task = taskVM.selectedTask {
                     Text(task.title)
                         .font(PDS.Typography.callout)
@@ -54,7 +50,6 @@ struct FocusModeView: View {
 
                 Spacer()
 
-                // Controls (auto-hide)
                 if showControls {
                     focusControls
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
@@ -62,7 +57,6 @@ struct FocusModeView: View {
             }
             .padding()
 
-            // Exit button (top left)
             if showControls {
                 VStack {
                     HStack {
@@ -91,75 +85,56 @@ struct FocusModeView: View {
                 backgroundPhase = 1
             }
         }
-        .onDisappear {
-            controlsTimer?.invalidate()
-        }
+        .onDisappear { controlsTimer?.invalidate() }
         #if os(iOS)
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
         #endif
     }
 
-    // MARK: - Focus Background
-
     private var focusBackground: some View {
         ZStack {
             Color(hex: "#070709")
-
-            // Animated blobs
             ForEach(0..<3, id: \.self) { i in
                 Circle()
-                    .fill(
-                        timerVM.currentSession.color
-                            .opacity(0.08 + Double(i) * 0.03)
-                    )
+                    .fill(store.currentSession.color.opacity(0.08 + Double(i) * 0.03))
                     .frame(width: 300 + CGFloat(i * 80))
                     .offset(
                         x: CGFloat(sin(backgroundPhase * .pi + Double(i) * 1.2)) * 60,
                         y: CGFloat(cos(backgroundPhase * .pi + Double(i) * 0.8)) * 80
                     )
                     .blur(radius: 60 + CGFloat(i * 20))
-                    .animation(
-                        .easeInOut(duration: 4 + Double(i)).repeatForever(autoreverses: true),
-                        value: backgroundPhase
-                    )
+                    .animation(.easeInOut(duration: 4 + Double(i)).repeatForever(autoreverses: true), value: backgroundPhase)
             }
         }
     }
 
-    // MARK: - Focus Controls
-
     private var focusControls: some View {
         HStack(spacing: PDS.Spacing.xl) {
-            // Reset
             focusControlButton(systemImage: "arrow.counterclockwise") {
-                timerVM.reset()
+                store.send(.resetTapped)
             }
-
-            // Main
             Button {
-                switch timerVM.timerState {
-                case .idle:    timerVM.start()
-                case .running: timerVM.pause()
-                case .paused:  timerVM.resume()
-                case .completed: timerVM.reset()
+                switch store.timerState {
+                case .idle: store.send(.startTapped)
+                case .running: store.send(.pauseTapped)
+                case .paused: store.send(.resumeTapped)
+                case .completed: store.send(.resetTapped)
                 }
             } label: {
                 ZStack {
                     Circle()
-                        .fill(timerVM.currentSession.color)
+                        .fill(store.currentSession.color)
                         .frame(width: 80, height: 80)
-                        .shadow(color: timerVM.currentSession.color.opacity(0.5), radius: 20)
-                    Image(systemName: timerVM.isRunning ? "pause.fill" : "play.fill")
+                        .shadow(color: store.currentSession.color.opacity(0.5), radius: 20)
+                    Image(systemName: store.isRunning ? "pause.fill" : "play.fill")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(.white)
                 }
             }
             .buttonStyle(ScaleButtonStyle())
-
-            // Skip
             focusControlButton(systemImage: "forward.end.fill") {
-                timerVM.skip()
+                store.send(.skipTapped)
             }
         }
         .padding(.bottom, PDS.Spacing.xxl)
@@ -179,8 +154,6 @@ struct FocusModeView: View {
         .buttonStyle(ScaleButtonStyle())
     }
 
-    // MARK: - Auto-hide Helpers
-
     private func showControlsTemporarily() {
         withAnimation { showControls = true }
         scheduleControlsHide()
@@ -195,7 +168,9 @@ struct FocusModeView: View {
 }
 
 #Preview {
-    FocusModeView(isPresented: .constant(true))
-        .environment(TimerViewModel())
-        .environment(TaskViewModel())
+    FocusModeView(
+        store: Store(initialState: FocusFeature.State()) { FocusFeature() },
+        isPresented: .constant(true)
+    )
+    .environment(TaskViewModel())
 }

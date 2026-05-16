@@ -3,43 +3,36 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
 
 import SwiftUI
 import AuthenticationServices
-
-// MARK: - Sign In View
+import ComposableArchitecture
 
 struct SignInView: View {
-    @State private var authService = AuthService.shared
+    @Bindable var store: StoreOf<SignInFeature>
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-
-            // Hero
             VStack(spacing: 8) {
                 Image("logo")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 72, height: 72)
-
                 Text("Pomoro")
                     .font(.largeTitle.bold())
-
                 Text("Focus beautifully.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-
             Spacer()
-
-            // Sign in options
             VStack(spacing: 10) {
-                // Apple Sign In
                 Button {
-                    authService._devBypass = true
+                    store.send(.signInWithAppleTapped)
                 } label: {
                     Label("Continue with Apple", systemImage: "apple.logo")
                         .frame(maxWidth: .infinity)
@@ -47,9 +40,8 @@ struct SignInView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
 
-                // Google Sign In (coming soon)
                 Button {
-                    authService._devBypass = true
+                    store.send(.signInWithGoogleTapped)
                 } label: {
                     HStack(spacing: 8) {
                         GoogleGIcon().frame(width: 16, height: 16)
@@ -61,8 +53,7 @@ struct SignInView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
 
-                // Error
-                if let error = authService.error {
+                if let error = store.error {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
@@ -71,7 +62,6 @@ struct SignInView: View {
             }
             .padding(.horizontal, 24)
 
-            // Terms
             Group {
                 Text("By continuing, you agree to our ")
                 + Text("Terms of Service").underline()
@@ -89,7 +79,6 @@ struct SignInView: View {
     }
 }
 
-
 #Preview {
-    SignInView()
+    SignInView(store: Store(initialState: SignInFeature.State()) { SignInFeature() })
 }

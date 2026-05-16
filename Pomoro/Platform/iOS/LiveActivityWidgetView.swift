@@ -1,3 +1,13 @@
+//
+//  LiveActivityWidgetView.swift
+//  Pomoro
+//
+//  Author: Agus Cahyono
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
+//
+
 import SwiftUI
 import WidgetKit
 import ActivityKit

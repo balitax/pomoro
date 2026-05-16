@@ -3,8 +3,11 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
+
 
 import Foundation
 import SwiftUI
@@ -82,12 +85,12 @@ enum AmbientSound: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .none:   "None"
-        case .rain:   "Rain"
-        case .forest: "Forest"
-        case .cafe:   "Café"
-        case .waves:  "Ocean Waves"
-        case .fire:   "Fireplace"
+        case .none:   String(localized: "None")
+        case .rain:   String(localized: "Rain")
+        case .forest: String(localized: "Forest")
+        case .cafe:   String(localized: "Café")
+        case .waves:  String(localized: "Ocean Waves")
+        case .fire:   String(localized: "Fireplace")
         }
     }
 

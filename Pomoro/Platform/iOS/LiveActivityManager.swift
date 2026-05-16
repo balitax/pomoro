@@ -3,8 +3,11 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
+
 
 #if os(iOS)
 import Foundation

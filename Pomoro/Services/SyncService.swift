@@ -3,8 +3,11 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
+
 
 import Foundation
 import SwiftData
@@ -75,6 +78,23 @@ final class SyncService {
                 print("⚠️ SyncService.pushSession error:", error.localizedDescription)
             }
         }
+    }
+
+    // MARK: - Local Save
+
+    @MainActor
+    func saveSessionLocally(sessionType: SessionType, duration: TimeInterval, actualDuration: TimeInterval, taskID: UUID?) {
+        guard let ctx = modelContext else { return }
+        let task = taskID.flatMap { id in
+            try? ctx.fetch(FetchDescriptor<PomodoroTask>(
+                predicate: #Predicate { $0.id == id }
+            )).first
+        }
+        let session = PomodoroSession(sessionType: sessionType, duration: duration, task: task)
+        session.complete(actualDuration: actualDuration)
+        ctx.insert(session)
+        try? ctx.save()
+        pushSession(session)
     }
 
     /// Tandai task sebagai deleted di Supabase (soft delete via is_completed)

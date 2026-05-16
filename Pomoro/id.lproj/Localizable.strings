@@ -1,0 +1,163 @@
+/* ═══ Pomoro — Bahasa Indonesia ═══ */
+
+/* ── AppTab ── */
+"Timer" = "Timer";
+"Tasks" = "Tugas";
+"Stats" = "Statistik";
+"Settings" = "Pengaturan";
+
+/* ── SessionType ── */
+"Focus" = "Fokus";
+"Short Break" = "Istirahat Singkat";
+"Long Break" = "Istirahat Panjang";
+"FOCUS" = "FOKUS";
+"BREAK" = "ISTIRAHAT";
+"LONG BREAK" = "ISTIRAHAT PANJANG";
+
+/* ── Onboarding ── */
+"Skip" = "Lewati";
+"Continue" = "Lanjutkan";
+"Get Started" = "Mulai";
+"Focus on What Matters" = "Fokus pada Hal Penting";
+"Use the proven Pomodoro technique to work deeply and recharge intentionally." = "Gunakan teknik Pomodoro untuk bekerja secara mendalam dan istirahat dengan sengaja.";
+"Manage Your Tasks" = "Kelola Tugas Anda";
+"Capture what needs to get done and link tasks directly to your focus sessions." = "Catat apa yang perlu dilakukan dan hubungkan tugas langsung ke sesi fokus Anda.";
+"Track Your Progress" = "Lacak Kemajuan Anda";
+"Daily streaks and insightful charts keep you motivated and on track." = "Rangkaian harian dan grafik informatif membuat Anda tetap termotivasi.";
+
+/* ── Sign In ── */
+"Pomoro" = "Pomoro";
+"Focus beautifully." = "Fokus dengan indah.";
+"Continue with Apple" = "Lanjutkan dengan Apple";
+"Continue with Google" = "Lanjutkan dengan Google";
+"By continuing, you agree to our " = "Dengan melanjutkan, Anda menyetujui ";
+"Terms of Service" = "Ketentuan Layanan";
+" and " = " dan ";
+"Privacy Policy" = "Kebijakan Privasi";
+"." = ".";
+
+/* ── TimerView ── */
+"Up Next" = "Selanjutnya";
+"Reset" = "Atur Ulang";
+"Skip" = "Lewati";
+"Link a task" = "Hubungkan tugas";
+"·" = "·";
+"Choose Task" = "Pilih Tugas";
+"Cancel" = "Batal";
+"No Tasks" = "Tidak Ada Tugas";
+"Add a task to link it to your session" = "Tambahkan tugas untuk menghubungkannya ke sesi Anda";
+
+/* ── InfoView ── */
+"Pomodoro Timer" = "Pengatur Waktu Pomodoro";
+"Focus sessions with short and long breaks" = "Sesi fokus dengan istirahat singkat dan panjang";
+"Task Tracking" = "Pelacakan Tugas";
+"Link tasks to your focus sessions" = "Hubungkan tugas ke sesi fokus Anda";
+"Statistics" = "Statistik";
+"Track your productivity over time" = "Lacak produktivitas Anda dari waktu ke waktu";
+"Notifications" = "Notifikasi";
+"Get notified when your session ends" = "Dapatkan notifikasi saat sesi Anda berakhir";
+"iOS & macOS" = "iOS & macOS";
+"Available on all your Apple devices" = "Tersedia di semua perangkat Apple Anda";
+"Made with ♥ by Agus Cahyono" = "Dibuat dengan ♥ oleh Agus Cahyono";
+"© 2025 Pomoro. All rights reserved." = "© 2025 Pomoro. Hak cipta dilindungi.";
+"About Pomoro" = "Tentang Pomoro";
+"Done" = "Selesai";
+
+/* ── AddTaskSheet ── */
+"Task name" = "Nama tugas";
+"Notes (optional)" = "Catatan (opsional)";
+"Pomodoros" = "Pomodoro";
+"Estimated sessions" = "Perkiraan sesi";
+"Add to today" = "Tambahkan ke hari ini";
+"New Task" = "Tugas Baru";
+"Add" = "Tambah";
+
+/* ── TaskListView ── */
+"Tasks" = "Tugas";
+"No Tasks Yet" = "Belum Ada Tugas";
+"Add a task to track your pomodoro sessions" = "Tambahkan tugas untuk melacak sesi pomodoro Anda";
+"Delete" = "Hapus";
+"Completed" = "Selesai";
+"Today" = "Hari Ini";
+
+/* ── SettingsView ── */
+"Settings" = "Pengaturan";
+"Timer" = "Timer";
+"Sessions Before Long Break" = "Sesi Sebelum Istirahat Panjang";
+"Daily Goal" = "Target Harian";
+"Behavior" = "Perilaku";
+"Auto-start Breaks" = "Mulai Otomatis Istirahat";
+"Auto-start Focus" = "Mulai Otomatis Fokus";
+"Sound & Haptics" = "Suara & Haptik";
+"Session Sounds" = "Suara Sesi";
+"Ticking Sound" = "Suara Detak";
+"Haptic Feedback" = "Umpan Balik Haptik";
+"Ambient Sound" = "Suara Ambient";
+"Appearance" = "Tampilan";
+"System" = "Sistem";
+"Light" = "Terang";
+"Dark" = "Gelap";
+"Motivational Messages" = "Pesan Motivasi";
+"Session Complete" = "Sesi Selesai";
+"Break Reminders" = "Pengingat Istirahat";
+"About" = "Tentang";
+"Version" = "Versi";
+"1.0.0" = "1.0.0";
+"Focus Duration" = "Durasi Fokus";
+"Short Break" = "Istirahat Singkat";
+"Long Break" = "Istirahat Panjang";
+
+/* ── StatisticsView ── */
+"Statistics" = "Statistik";
+"Focus Time" = "Waktu Fokus";
+"Day Streak" = "Rangkaian Hari";
+"Daily Goal" = "Target Harian";
+"Goal reached! 🎉" = "Target tercapai! 🎉";
+"sessions to go" = "sesi lagi";
+"This Week" = "Minggu Ini";
+"All Time" = "Semua Waktu";
+"Pomodoros" = "Pomodoro";
+"Daily Avg" = "Rata-rata Harian";
+
+/* ── AmbientSound ── */
+"None" = "Tidak Ada";
+"Rain" = "Hujan";
+"Forest" = "Hutan";
+"Café" = "Kafe";
+"Ocean Waves" = "Ombak Laut";
+"Fireplace" = "Perapian";
+
+/* ── Notifications ── */
+"Focus Session Complete 🍅" = "Sesi Fokus Selesai 🍅";
+"Great work! Time for a break." = "Kerja bagus! Waktunya istirahat.";
+"Break Over ☕" = "Istirahat Selesai ☕";
+"Ready to focus again?" = "Siap fokus lagi?";
+"Long Break Done 🌿" = "Istirahat Panjang Selesai 🌿";
+"Feeling refreshed? Let's get back to it!" = "Sudah segar? Ayo kembali!";
+"Still taking a break?" = "Masih istirahat?";
+"Tap to start your next focus session." = "Ketuk untuk memulai sesi fokus berikutnya.";
+
+/* ── Live Activity ── */
+"Focus Session" = "Sesi Fokus";
+"Running" = "Berjalan";
+"Paused" = "Dijeda";
+
+/* ── App Intents ── */
+"Start Pomoro Timer" = "Mulai Timer Pomoro";
+"Start a focus session." = "Mulai sesi fokus.";
+"Timer started!" = "Timer dimulai!";
+"Pause Pomoro Timer" = "Jeda Timer Pomoro";
+"Pause the current focus session." = "Jeda sesi fokus saat ini.";
+"Timer paused!" = "Timer dijeda!";
+"Skip Pomoro Session" = "Lewati Sesi Pomoro";
+"Skip the current session and advance." = "Lewati sesi saat ini dan lanjutkan.";
+"Session skipped!" = "Sesi dilewati!";
+"Start Timer" = "Mulai Timer";
+"Pause Timer" = "Jeda Timer";
+"Skip Session" = "Lewati Sesi";
+
+/* ── Miscellaneous ── */
+"About" = "Tentang";
+"Version 1.0" = "Versi 1.0";
+"Version" = "Versi";
+"Support" = "Dukungan";

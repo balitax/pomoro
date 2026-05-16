@@ -3,8 +3,11 @@
 //  Pomoro
 //
 //  Author: Agus Cahyono
-//  Created: 2025
+//  Created: 2025-05-16 17:00
+//  LinkedIn: https://linkedin.com/in/cahyocode
+//  Email: cahyo.mamen@gmail.com
 //
+
 
 import Foundation
 
@@ -17,17 +20,17 @@ enum SessionType: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .focus:      "Focus"
-        case .shortBreak: "Short Break"
-        case .longBreak:  "Long Break"
+        case .focus:      String(localized: "Focus")
+        case .shortBreak: String(localized: "Short Break")
+        case .longBreak:  String(localized: "Long Break")
         }
     }
 
     var shortName: String {
         switch self {
-        case .focus:      "FOCUS"
-        case .shortBreak: "BREAK"
-        case .longBreak:  "LONG BREAK"
+        case .focus:      String(localized: "FOCUS")
+        case .shortBreak: String(localized: "BREAK")
+        case .longBreak:  String(localized: "LONG BREAK")
         }
     }
 

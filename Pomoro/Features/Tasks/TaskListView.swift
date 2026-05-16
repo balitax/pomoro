@@ -8,7 +8,6 @@
 //  Email: cahyo.mamen@gmail.com
 //
 
-
 import SwiftUI
 import SwiftData
 
@@ -22,6 +21,7 @@ struct TaskListView: View {
 
     @State private var showAddTask = false
     @State private var showCompleted = false
+    @State private var appeared = false
 
     private var todayTasks: [PomodoroTask] {
         allTasks.filter { $0.isToday && !$0.isCompleted }
@@ -32,31 +32,35 @@ struct TaskListView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(hex: "#0A0A0B").ignoresSafeArea()
+        ZStack {
+            Color(.systemGroupedBackground).ignoresSafeArea()
 
-                if allTasks.isEmpty {
-                    EmptyStateView(
-                        icon: "checklist",
-                        title: language.tasks.noTasksYet,
-                        subtitle: language.tasks.noTasksDescription
-                    )
-                } else {
-                    taskList
-                }
-            }
-            .navigationTitle(language.tasks.title)
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
-            .toolbar { toolbarContent }
-            .sheet(isPresented: $showAddTask) {
-                AddTaskSheet(isPresented: $showAddTask)
-                    .environment(taskVM)
+            if allTasks.isEmpty {
+                EmptyStateView(
+                    icon: "checklist",
+                    title: language.tasks.noTasksYet,
+                    subtitle: language.tasks.noTasksDescription
+                )
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 24)
+                .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.05), value: appeared)
+            } else {
+                taskList
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 16)
+                    .animation(.spring(response: 0.55, dampingFraction: 0.8).delay(0.05), value: appeared)
             }
         }
+        .navigationTitle(language.tasks.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar { toolbarContent }
+        .sheet(isPresented: $showAddTask) {
+            AddTaskSheet(isPresented: $showAddTask)
+                .environment(taskVM)
+        }
         .onAppear {
+            appeared = true
             taskVM.setModelContext(modelContext)
         }
     }
@@ -128,6 +132,7 @@ struct TaskListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
     }
 
     private func sectionHeader(_ title: String, count: Int) -> some View {
@@ -137,10 +142,10 @@ struct TaskListView: View {
                 .foregroundStyle(.secondary)
             Text("\(count)")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color(.systemGroupedBackground))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
-                .background(Color.secondary.opacity(0.3), in: Capsule())
+                .background(.secondary, in: Capsule())
         }
         .textCase(nil)
     }

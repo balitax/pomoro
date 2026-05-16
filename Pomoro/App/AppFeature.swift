@@ -22,10 +22,18 @@ struct AppFeature: Reducer {
 
     @ObservableState
     struct State: Equatable {
-        var path: Path = .onboarding
+        var path: Path
         var onboarding = OnboardingFeature.State()
         var signIn = SignInFeature.State()
         var mainTab = MainTabCoordinator.State()
+
+        init() {
+            if UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
+                path = .signIn
+            } else {
+                path = .onboarding
+            }
+        }
     }
 
     @CasePathable
